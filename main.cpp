@@ -1,7 +1,6 @@
 // g++ main.cpp -lpthread
 
 #include <iostream>
-#include "AbstractStage.hpp"
 #include "FirstStage.cpp"
 #include "SecondStage.cpp"
 #include "ThirdStage.cpp"

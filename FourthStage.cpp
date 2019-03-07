@@ -1,7 +1,5 @@
 
-#include <cstdlib>
 #include "UnaryMathStage.hpp"
-#include <iostream>
 
 class FourthStage : public UnaryMathStage
 {

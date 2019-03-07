@@ -1,9 +1,7 @@
 
 #pragma once
 
-#include <cstdlib>
 #include "AbstractStage.hpp"
-#include <iostream>
 
 class UnaryMathStage : public AbstractStage
 {

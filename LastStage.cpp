@@ -1,5 +1,4 @@
 
-#include <cstdlib>
 #include "AbstractStage.hpp"
 #include <iostream>
 
