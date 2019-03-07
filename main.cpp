@@ -1,6 +1,7 @@
 // g++ main.cpp -lpthread
 
 #include <iostream>
+#include "AbstractStage.hpp"
 #include "FirstStage.cpp"
 #include "SecondStage.cpp"
 #include "ThirdStage.cpp"
@@ -12,7 +13,8 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 
-    if(argc != 2){
+    if (argc != 2)
+    {
         cout << "Usage: ./pipeline <number_of_items_to_generate>" << endl;
         return 1;
     }
@@ -33,30 +35,22 @@ int main(int argc, char *argv[])
     FourthStage decrementStage = FourthStage(&q3, &q4);
     LastStage printStage = LastStage(&q4);
 
-
     // keep track of all threads
-    std::vector<std::thread *> tid;
-    tid.resize(0);
+    std::vector<AbstractStage *> stages;
+    stages.resize(0);
 
-    // starts all the stages threads
-    streamStage.start();
-    incrementStage.start();
-    squareStage.start();
-    decrementStage.start();
-    printStage.start();
-
-    // take a reference to each thread
-    tid.push_back(streamStage.get_thread());
-    tid.push_back(incrementStage.get_thread());
-    tid.push_back(squareStage.get_thread());
-    tid.push_back(decrementStage.get_thread());
-    tid.push_back(printStage.get_thread());
+    stages.push_back(&streamStage);
+    stages.push_back(&incrementStage);
+    stages.push_back(&squareStage);
+    stages.push_back(&decrementStage);
+    stages.push_back(&printStage);
 
     // join threads and return
-    for (auto &t : tid)
-    {
-        t->join();
-    }
+    for (auto &stage : stages)
+        stage->start();
+
+    for (auto &stage : stages)
+        stage->get_thread()->join();
 
     return 0;
 }

@@ -3,7 +3,7 @@
 #include "AbstractStage.hpp"
 #include <iostream>
 
-class LastStage : AbstractStage
+class LastStage : public AbstractStage
 {
 
 public:

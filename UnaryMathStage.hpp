@@ -5,7 +5,7 @@
 #include "AbstractStage.hpp"
 #include <iostream>
 
-class UnaryMathStage : AbstractStage
+class UnaryMathStage : public AbstractStage
 {
 
 public:
@@ -18,27 +18,22 @@ public:
 
   void execute()
   {
-    int readValue = 1;
-    do
+    bool eof = false;
+
+    while (!eof)
     {
-      while (!prevQueue->is_empty())
-      {
-        readValue = prevQueue->pop();
+      int readValue = prevQueue->pop();
+      int computedValue = 0;
 
-        std::this_thread::sleep_for(10ms);
+      std::this_thread::sleep_for(10ms);
 
-        if (readValue == 0)
-          continue;
+      if (readValue == 0)
+        eof = true;
+      else
+        computedValue = compute_operation(readValue);
 
-        //std::cout << "ThirdStage reads " << readValue << std::endl;
-        auto computedValue = compute_operation(readValue);
-        nextQueue->push(computedValue);
-
-        //std::cout << " --> ThirdStage writes " << computedValue << std::endl;
-      }
-    } while (readValue > 0);
-    nextQueue->push(0);
-    //std::cout << "ThirdStage end" << std::endl;
+      nextQueue->push(computedValue);
+    }
   }
 
   virtual int compute_operation(int a) = 0;

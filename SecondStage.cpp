@@ -3,7 +3,7 @@
 #include "UnaryMathStage.hpp"
 #include <iostream>
 
-class SecondStage : UnaryMathStage
+class SecondStage : public UnaryMathStage
 {
 
 public:
