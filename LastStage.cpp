@@ -16,23 +16,20 @@ public:
 
   void execute()
   {
-    std::cout << "LastStage: ";
-    int readValue = 1;
-    do
+    bool eof = false;
+
+    while (!eof)
     {
+      int readValue = prevQueue->pop();
+      int computedValue = 0;
+
       std::this_thread::sleep_for(10ms);
-      while (!prevQueue->is_empty())
-      {
-        readValue = prevQueue->pop();
 
-        if (readValue == 0)
-          continue;
-
+      if (readValue == 0)
+        eof = true;
+      else
         std::cout << readValue << " ";
-
-        //std::cout << " --> ThirdStage writes " << computedValue << std::endl;
-      }
-    } while (readValue > 0);
-    std::cout << std::endl;
+      std::cout << std::endl;
+    }
   }
 };
