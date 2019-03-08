@@ -24,9 +24,9 @@ public:
   }
 
  
-  std::thread* get_thread()
+  void join()
   {
-    return thread;
+    return thread->join();
   }
   
   void start()

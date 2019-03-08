@@ -6,7 +6,7 @@ class LastStage : public AbstractStage
 {
 
 public:
-  using AbstractStage::get_thread;
+  using AbstractStage::join;
   using AbstractStage::start;
 
   LastStage(ThreadSafeQueue<int> *_prevQueue) : AbstractStage(_prevQueue, nullptr)
@@ -28,7 +28,7 @@ public:
         eof = true;
       else
         std::cout << readValue << " ";
-      std::cout << std::endl;
     }
+    std::cout << std::endl;
   }
 };

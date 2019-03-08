@@ -10,7 +10,7 @@ private:
   int streamLength;
 
 public:
-  using AbstractStage::get_thread;
+  using AbstractStage::join;
   using AbstractStage::start;
 
   FirstStage(ThreadSafeQueue<int> *_nextQueue, int number) : AbstractStage(nullptr, _nextQueue), streamLength(number)
@@ -23,11 +23,11 @@ public:
     {
       auto computedValue = i + 1;//rand() % 100 + 1;
       nextQueue->push(computedValue);
-      std::cout << "[" << computedValue << "]" << " ";
+      //std::cout << "[" << computedValue << "]" << " ";
       std::this_thread::sleep_for(10ms);
     }
     nextQueue->push(0);
-    std::cout << std::endl;
+    //std::cout << std::endl;
     //std::cout << "FirstStage ends " << std::endl;
   }
 };

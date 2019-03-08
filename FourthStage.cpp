@@ -6,7 +6,7 @@ class FourthStage : public UnaryMathStage
 
 public:
   using UnaryMathStage::execute;
-  using UnaryMathStage::get_thread;
+  using UnaryMathStage::join;
   using UnaryMathStage::start;
 
   FourthStage(ThreadSafeQueue<int> *_prevQueue, ThreadSafeQueue<int> *_nextQueue) : UnaryMathStage(_prevQueue, _nextQueue)

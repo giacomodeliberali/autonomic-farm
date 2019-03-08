@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
         stage->start();
 
     for (auto &stage : stages)
-        stage->get_thread()->join();
+        stage->join();
 
     return 0;
 }

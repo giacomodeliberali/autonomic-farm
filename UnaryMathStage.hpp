@@ -7,7 +7,7 @@ class UnaryMathStage : public AbstractStage
 {
 
 public:
-  using AbstractStage::get_thread;
+  using AbstractStage::join;
   using AbstractStage::start;
 
   UnaryMathStage(ThreadSafeQueue<int> *_prevQueue, ThreadSafeQueue<int> *_nextQueue) : AbstractStage(_prevQueue, _nextQueue)
