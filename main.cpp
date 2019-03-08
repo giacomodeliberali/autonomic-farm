@@ -17,6 +17,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    chrono::system_clock::time_point start = std::chrono::system_clock::now();
+
     // get the number of number the pipeline have to generate and process
     int intArg = atoi(argv[1]);
 
@@ -49,6 +51,9 @@ int main(int argc, char *argv[])
 
     for (auto &stage : stages)
         stage->join();
+
+    chrono::system_clock::time_point end = std::chrono::system_clock::now();
+    cout << "Execution time: " << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " microseconds" << std::endl;
 
     return 0;
 }

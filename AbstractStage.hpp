@@ -11,7 +11,7 @@ private:
 
   void exec_in_thread()
   {
-    std::cout << "Stage " << thread_id << " on CPU " << sched_getcpu() << std::endl;
+    // std::cout << "Stage " << thread_id << " on CPU " << sched_getcpu() << std::endl;
     this->execute();
   }
 
@@ -46,12 +46,9 @@ public:
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
     CPU_SET(thread_id % num_cpus, &cpuset);
-    int rc = pthread_setaffinity_np(thread->native_handle(),
-                                    sizeof(cpu_set_t), &cpuset);
+    int rc = pthread_setaffinity_np(thread->native_handle(), sizeof(cpu_set_t), &cpuset);
 
     if (rc != 0)
-    {
       std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
     }
-  }
 };
