@@ -9,7 +9,7 @@ public:
   using AbstractStage::join;
   using AbstractStage::start;
 
-  LastStage(ThreadSafeQueue<int> *_prevQueue) : AbstractStage(_prevQueue, nullptr)
+  LastStage(ThreadSafeQueue<int> *_prevQueue, int thread_id) : AbstractStage(_prevQueue, nullptr, thread_id)
   {
   }
 

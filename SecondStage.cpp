@@ -9,7 +9,7 @@ public:
   using UnaryMathStage::join;
   using UnaryMathStage::start;
 
-  SecondStage(ThreadSafeQueue<int> *_prevQueue, ThreadSafeQueue<int> *_nextQueue) : UnaryMathStage(_prevQueue, _nextQueue)
+  SecondStage(ThreadSafeQueue<int> *_prevQueue, ThreadSafeQueue<int> *_nextQueue, int thread_id) : UnaryMathStage(_prevQueue, _nextQueue, thread_id)
   {
   }
 

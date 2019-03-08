@@ -13,7 +13,7 @@ public:
   using AbstractStage::join;
   using AbstractStage::start;
 
-  FirstStage(ThreadSafeQueue<int> *_nextQueue, int number) : AbstractStage(nullptr, _nextQueue), streamLength(number)
+  FirstStage(ThreadSafeQueue<int> *_nextQueue, int number, int thread_id) : AbstractStage(nullptr, _nextQueue, thread_id), streamLength(number)
   {
   }
 

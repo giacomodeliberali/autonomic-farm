@@ -11,7 +11,6 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-
     if (argc != 2)
     {
         cout << "Usage: ./pipeline <number_of_items_to_generate>" << endl;
@@ -28,11 +27,11 @@ int main(int argc, char *argv[])
     ThreadSafeQueue<int> q4;
 
     // initialize stages with correct queues
-    FirstStage streamStage = FirstStage(&q1, intArg);
-    SecondStage incrementStage = SecondStage(&q1, &q2);
-    ThirdStage squareStage = ThirdStage(&q2, &q3);
-    FourthStage decrementStage = FourthStage(&q3, &q4);
-    LastStage printStage = LastStage(&q4);
+    FirstStage streamStage = FirstStage(&q1, intArg, 1);
+    SecondStage incrementStage = SecondStage(&q1, &q2, 2);
+    ThirdStage squareStage = ThirdStage(&q2, &q3, 3);
+    FourthStage decrementStage = FourthStage(&q3, &q4, 4);
+    LastStage printStage = LastStage(&q4, 5);
 
     // keep track of all threads
     std::vector<AbstractStage *> stages;

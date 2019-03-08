@@ -10,7 +10,7 @@ public:
   using AbstractStage::join;
   using AbstractStage::start;
 
-  UnaryMathStage(ThreadSafeQueue<int> *_prevQueue, ThreadSafeQueue<int> *_nextQueue) : AbstractStage(_prevQueue, _nextQueue)
+  UnaryMathStage(ThreadSafeQueue<int> *_prevQueue, ThreadSafeQueue<int> *_nextQueue, int thread_id) : AbstractStage(_prevQueue, _nextQueue, thread_id)
   {
   }
 
