@@ -1,5 +1,8 @@
 CXX      := g++
 CXXFLAGS := -pthread
 
-pipeline: main.cpp
-	$(CXX) $(CXXFLAGS) -o pipeline main.cpp
+pipeline:
+	$(CXX) $(CXXFLAGS) -o pipeline main.cpp stages.cpp
+
+clean:
+	rm pipeline
