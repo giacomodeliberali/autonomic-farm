@@ -1,0 +1,12 @@
+# Ingore all
+*.*
+
+# Exept cpp and header files
+!*.cpp
+!*.hpp
+
+# and gitignore
+!.gitignore
+!*.md
+
+pipeline
