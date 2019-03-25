@@ -22,7 +22,6 @@ class ThreadSafeQueue
     std::deque<T> d_queue;
 
   public:
-    ThreadSafeQueue(std::string s) { std::cout << "Created " << s << " queue " << std::endl; }
     ThreadSafeQueue() {}
 
     void push(T const &value)
