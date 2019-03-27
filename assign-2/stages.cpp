@@ -22,11 +22,8 @@ private:
     {
       auto rnd = rand() % stream_max;
       input_queue->push(rnd);
-      cout << rnd << " ";
     }
     input_queue->push({});
-    cout << endl
-         << "Supplier ends" << endl;
   }
 
 public:
@@ -47,7 +44,7 @@ public:
 class Worker
 {
 
-public:
+private:
   ThreadSafeQueue<experimental::optional<int>> *input_queue;
   ThreadSafeQueue<experimental::optional<int>> *output_queue;
   std::thread *thread;
@@ -65,12 +62,13 @@ public:
       {
         int value = inpute_value.value();
 
-        std::cout << "w" << worker_id << " <-- " << value << std::endl;
+        this_thread::sleep_for(1ms);
 
-        auto output = value * 2;
+        int output = 0;
+        for (int i = 2; i <= value; i++)
+          if (isPrime(i))
+            output++;
         output_queue->push(output);
-
-        std::cout << "\tw" << worker_id << " --> " << output << std::endl;
       }
       catch (const std::logic_error &e)
       {
@@ -81,6 +79,24 @@ public:
     cout << "[" << worker_id << "] ENDS" << endl;
   }
 
+  bool isPrime(int n)
+  {
+    if (n <= 1)
+      return false;
+    if (n <= 3)
+      return true;
+
+    if (n % 2 == 0 || n % 3 == 0)
+      return false;
+
+    for (int i = 5; i * i <= n; i = i + 6)
+      if (n % i == 0 || n % (i + 2) == 0)
+        return false;
+
+    return true;
+  }
+
+public:
   Worker(ThreadSafeQueue<experimental::optional<int>> *_input_queue,
          ThreadSafeQueue<experimental::optional<int>> *_output_queue,
          int _worker_id) : output_queue(_output_queue),
@@ -92,7 +108,7 @@ public:
 
   void start()
   {
-    thread = new std::thread([this] {
+    thread = new std::thread([&] {
       this->execute();
     });
   }

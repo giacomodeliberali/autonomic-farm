@@ -14,8 +14,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    chrono::system_clock::time_point start = std::chrono::system_clock::now();
-
     // get the number of workers
     int nw = atoi(argv[1]);
 
@@ -29,7 +27,7 @@ int main(int argc, char *argv[])
     ThreadSafeQueue<experimental::optional<int>> output_queue;
 
     // put in input_queue 1000 numbers in range [0,10000]
-    Supplier supplier = Supplier(&input_queue, 10000, 10);
+    Supplier supplier = Supplier(&input_queue, 10000, 10000);
 
     // join supplier
     supplier.join();
@@ -41,6 +39,8 @@ int main(int argc, char *argv[])
         workers.push_back(w_i);
     }
 
+    chrono::system_clock::time_point start = std::chrono::system_clock::now();
+
     for (auto w_i : workers)
         w_i->start();
 
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
         w_i->join();
 
     chrono::system_clock::time_point end = std::chrono::system_clock::now();
-    std::cout << "Execution time: " << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " microseconds" << std::endl;
+    std::cout << "Execution time: " << chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " milliseconds" << std::endl;
 
     return 0;
 }
