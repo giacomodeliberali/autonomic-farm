@@ -9,6 +9,9 @@
 
 using namespace ff;
 
+bool is_prime(int n);
+int count_prime_numbers_up_to(int n);
+
 struct Emitter : ff_node_t<int>
 {
   private:
@@ -21,7 +24,7 @@ struct Emitter : ff_node_t<int>
 
     int *svc(int *)
     {
-        for (size_t i = 0; i < length; ++i)
+        for (int i = 0; i < length; ++i)
         {
             ff_send_out(new int(i));
         }
@@ -29,33 +32,29 @@ struct Emitter : ff_node_t<int>
     }
 };
 
-struct Worker : ff_node_t<int>
+struct Worker : ff_node_t<int, std::pair<int, int>>
 {
-    int *svc(int *task)
+    std::pair<int, int> *svc(int *number)
     {
-        int &t = *task;
-        t = t * t;
-        //std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        return task;
+        return new std::pair<int, int>(*number, count_prime_numbers_up_to(*number));
     }
 };
 
-struct Collector : ff_node_t<int>
+struct Collector : ff_node_t<std::pair<int, int>, int>
 {
 
-    Collector(std::vector<int> *output) : output(output)
+    std::vector<std::pair<int, int> *> *output;
+
+    Collector(std::vector<std::pair<int, int> *> *output) : output(output)
     {
     }
 
-    int *svc(int *task)
+    int *svc(std::pair<int, int> *pair)
     {
-        int &t = *task;
-        output->push_back(t);
-        //std::cout << "Collector recived: " << t << std::endl;
+        output->push_back(pair);
+        //std::cout << "Collector recived: " << pair->first << "->" << pair->second << std::endl;
         return GO_ON;
     }
-
-    std::vector<int> *output;
 };
 
 int main(int argc, char *argv[])
@@ -66,11 +65,12 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    int nworkers = std::atoi(argv[1]);
+    int nw = std::atoi(argv[1]);
     int length = std::atoi(argv[2]);
 
     // fed by collector
-    std::vector<int> output;
+    std::vector<std::pair<int, int> *> output;
+    output.resize(0);
 
     // set up emittor and collector
     Emitter emitter(length);
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
     // set up workers
     std::vector<std::unique_ptr<ff_node>> W;
-    for (int i = 0; i < nworkers; ++i)
+    for (int i = 0; i < nw; ++i)
         W.push_back(make_unique<Worker>());
 
     // set up farm
@@ -91,20 +91,45 @@ int main(int argc, char *argv[])
     /*     for (auto &i : output)
         std::cout << "[Farm] Computed: " << i << std::endl; */
 
-    std::cout << "[Farm] Time: " << ffTime(GET_TIME) << "\n";
+    std::cout << "[Farm, nw=" << nw << "] Time: " << ffTime(GET_TIME) << "\n";
 
     // set up parallel for
     ParallelFor pf;
     ffTime(START_TIME);
-    pf.parallel_for(0, length, [&](int i) {
-        output[i] *= output[i];
+    pf.parallel_for(0, length, nw, [&](int i) {
+        //std::cout << "PF: " << output.at(i)->first << "->" << output.at(i)->second << std::endl;
+        output.at(i)->second = count_prime_numbers_up_to(output.at(i)->first);
     });
     ffTime(STOP_TIME);
 
     /*     for (int i = 0; i < length; i++)
         std::cout << "[ParallelFor] Computed: " << output[i] << std::endl; */
 
-    std::cout << "[ParallelFor] Time: " << ffTime(GET_TIME) << "\n";
+    std::cout << "[ParallelFor, nw=" << nw << "] Time: " << ffTime(GET_TIME) << "\n";
 
     return 0;
+}
+
+bool is_prime(int n)
+{
+    if (n == 1 || n == 2)
+        return true;
+
+    for (int i = 2; i < sqrt(n); i++)
+    {
+        if (n % i == 0)
+            return false;
+    }
+    return true;
+}
+
+int count_prime_numbers_up_to(int n)
+{
+    int prime_numbers = 0;
+
+    for (int i = 2; i < n; i++)
+        if (is_prime(i))
+            prime_numbers++;
+
+    return prime_numbers;
 }

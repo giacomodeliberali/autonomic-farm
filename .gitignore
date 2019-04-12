@@ -1,2 +1,5 @@
 *.DS_STORE
 .vscode/
+
+# Executable files
+assign2bis
