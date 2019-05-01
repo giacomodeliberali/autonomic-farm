@@ -16,25 +16,25 @@ void make_run(Board *source, Board *target, int nw)
     // number of items each worker has to compute
     int worker_items = (int)(dim / nw);
 
-    int originY = 0;
-    int limit = originY + worker_items;
+    int start = 0;
+    int limit = start + worker_items;
 
     vector<Worker*> workers;
 
     for (int i = 0; i < nw; i++)
     {
         auto w = new Worker(source, target);
-        w->set_chunk(originY, limit);
-        w->start();
+        w->set_chunk(start, limit);
+        w->run();
 
         workers.push_back(w);
 
-        originY = limit + 1;
+        start = limit + 1;
 
-        if (originY >= dim) // the matrix is complete
+        if (start >= dim) // the matrix is complete
             break;
 
-        limit = originY + worker_items; // next chunk
+        limit = start + worker_items; // next chunk
     }
 
     for (auto &w : workers){
@@ -64,24 +64,24 @@ int main(int argc, char *argv[])
     main_displ->set_title("Game of Life");
 
     // build 2 matrixes with same display
-    Board *origin_board = new Board(n, main_displ);
-    Board *target_board = new Board(n, main_displ);
+    Board *source = new Board(n, main_displ);
+    Board *target = new Board(n, main_displ);
 
     // initialize
-    origin_board->init(seed);
-    origin_board->display();
+    source->init(seed);
+    source->display();
 
     for (int i = 0; i < iterations; i++)
     {
-        make_run(origin_board, target_board, nw);
+        make_run(source, target, nw);
 
         // display result
-        target_board->display();
+        target->display();
 
         // swap pointers
-        Board *tmp = origin_board;
-        origin_board = target_board;
-        target_board = tmp;
+        Board *tmp = source;
+        source = target;
+        target = tmp;
     }
 
     return 0;

@@ -12,7 +12,7 @@ class Worker
     thread *tid;
     Board *source;
     Board *target;
-    int x;
+    int start;
     int limit;
 
   public:
@@ -20,17 +20,17 @@ class Worker
     {
     }
 
-    void set_chunk(int x, int limit)
+    void set_chunk(int start, int limit)
     {
-        this->x = x;
+        this->start = start;
         this->limit = limit;
     }
 
-    void start()
+    void run()
     {
         tid = new thread([&] {
             int n = source->get_size();
-            for (int i = this->x; i < limit; i++)
+            for (int i = this->start; i < limit; i++)
             {
                 int x = i % n; // ensure bounds
                 int y = (i - x) / n;
