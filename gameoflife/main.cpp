@@ -42,6 +42,7 @@ void make_run(Board *origin, Board *target, int nw)
     int limit = originY + worker_items;
 
     vector<thread> pool;
+    
     for (int i = 0; i < nw; i++)
     {
         pool.push_back(thread(worker, origin, target, originY, limit));
@@ -63,8 +64,8 @@ int main(int argc, char *argv[])
     // nice result => ./main 500 10000 8
     if (argc < 4)
     {
-        cout << "Usage is: [n] [iterations] [nw] [seed]" << endl;
-        return (0);
+        cout << "./gameoflife <n> <iterations> <nw> [seed]" << endl;
+        return 1;
     }
 
     int n = atoi(argv[1]);

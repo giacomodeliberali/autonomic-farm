@@ -59,7 +59,7 @@ class Board
         int alive = 0;
         int offsets[] = {-1, 0, 1};
 
-        // search in all neighbourgs
+        // search in neighbourgs
         for (int i = 0; i < 3; i++)
         {
             for (int j = 0; j < 3; j++)
@@ -67,10 +67,10 @@ class Board
                 if (offsets[i] == 0 && offsets[j] == 0) // same cell, skip
                     continue;
 
-                int dx = (x + n + offsets[i]) % n; // link bounds
-                int dy = (y + n + offsets[j]) % n;
+                int x_off = (x + n + offsets[i]) % n; // link bounds
+                int y_off = (y + n + offsets[j]) % n;
 
-                if (get(dx, dy) == ALIVE)
+                if (get(x_off, y_off) == ALIVE)
                     alive++;
             }
         }
