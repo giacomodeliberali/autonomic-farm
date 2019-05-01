@@ -1,4 +1,5 @@
-#include <iostream>
+#pragma once
+
 #include "CImg.h"
 #include "shared.hpp"
 

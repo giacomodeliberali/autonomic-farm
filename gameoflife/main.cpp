@@ -2,37 +2,15 @@
 #include <vector>
 #include <cmath>
 #include "board.hpp"
+#include "worker.hpp"
 #include <chrono>
 #include <thread>
 
 using namespace std;
 
-void worker(Board *origin, Board *target, int originY, int limit)
+void make_run(Board *source, Board *target, int nw)
 {
-    int n = origin->get_size();
-    for (int i = originY; i < limit; i++)
-    {
-        int x = i % n; // ensure bounds
-        int y = (i - x) / n; 
-        
-        int alive = origin->get_alive_neighbours_count(x, y);
-
-        auto cell = origin->get(x, y);
-
-        if (alive < 2 || alive > 3) 
-            target->set(x, y, DEAD); // dead
-
-        if (alive == 2 || alive == 3)
-            target->set(x, y, cell); // remain the same
-
-        if (alive == 3 && cell != ALIVE)
-            target->set(x, y, ALIVE); // new born
-    }
-}
-
-void make_run(Board *origin, Board *target, int nw)
-{
-    int n = origin->get_size();
+    int n = source->get_size();
     int dim = n * n;
 
     // number of items each worker has to compute
@@ -41,11 +19,15 @@ void make_run(Board *origin, Board *target, int nw)
     int originY = 0;
     int limit = originY + worker_items;
 
-    vector<thread> pool;
-    
+    vector<Worker*> workers;
+
     for (int i = 0; i < nw; i++)
     {
-        pool.push_back(thread(worker, origin, target, originY, limit));
+        auto w = new Worker(source, target);
+        w->set_chunk(originY, limit);
+        w->start();
+
+        workers.push_back(w);
 
         originY = limit + 1;
 
@@ -55,8 +37,10 @@ void make_run(Board *origin, Board *target, int nw)
         limit = originY + worker_items; // next chunk
     }
 
-    for (auto &t : pool)
-        t.join();
+    for (auto &w : workers){
+        w->join();
+        delete w;
+    }
 }
 
 int main(int argc, char *argv[])
@@ -77,6 +61,7 @@ int main(int argc, char *argv[])
 
     // the board display
     CImgDisplay *main_displ = new CImgDisplay();
+    main_displ->set_title("Game of Life");
 
     // build 2 matrixes with same display
     Board *origin_board = new Board(n, main_displ);
