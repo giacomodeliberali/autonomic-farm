@@ -66,19 +66,14 @@ public:
 
     void initialize(vector<TIn> input, int start, int end, vector<ReduceWorkder<TOut, TIn, TKey> *> reducers)
     {
-        vector<pair<TOut, TKey> *> mapped;
         for (int i = start; i < end; i++)
         {
             auto pair = mapFun(input[i]);
-            mapped.push_back(pair);
-        }
 
-        // shuffle in reducers based on hash(key)
-        for (int i = 0; i < mapped.size(); i++)
-        {
-            auto hash = hashFun(mapped[i]->second);
-            reducers[hash % reducers.size()]->add(mapped[i], hash);
-        }
+            // shuffle in reducers based on hash(key)
+            auto hash = hashFun(pair->second);
+            reducers[hash % reducers.size()]->add(pair, hash);
+        }   
     }
 };
 
@@ -161,7 +156,7 @@ int main(int argc, char *argv[])
     });
 
     mapReduce.set_hash([](auto key) {
-        return key;
+        return key % 4;
     });
 
     mapReduce.set_nw(10, 4);
