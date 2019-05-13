@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <map>
 
 using namespace std;
 
@@ -11,26 +12,40 @@ class ReduceWorkder
 {
 private:
     function<TOut(TOut, TOut)> reduceFun;
-    vector<pair<TOut, TKey> *> mapped;
+    map<int, pair<TOut, TKey> *> container;
 
 public:
     ReduceWorkder(function<TOut(TOut, TOut)> reduceFun) : reduceFun(reduceFun)
     {
     }
 
-    void add(pair<TOut, TKey> *pair)
+    void add(pair<TOut, TKey> *p, int hash)
     {
-        mapped.push_back(pair);
+        // group by key then reduce
+        auto key = container.find(hash);
+        if (key != container.end())
+        {
+            // exists
+            auto reduced = reduceFun(container[hash]->first, p->first);
+            container[hash] = new pair(reduced, p->second);
+        }
+        else
+        {
+            // do not exist
+            container.insert(pair(hash, p));
+        }
     }
 
-    void reduce()
+    vector<pair<TOut, TKey> *> getPartialResults()
     {
-        // sort by key then reduce for each different key
-        for (auto &i : mapped)
+        vector<pair<TOut, TKey> *> partialResults;
+
+        for (auto reducedValue : container)
         {
-            cout << reduceFun(i->first, i->first) << " ";
+            partialResults.push_back(reducedValue.second);
         }
-        cout << endl;
+
+        return partialResults;
     }
 };
 
@@ -39,9 +54,13 @@ class MapWorker
 {
 private:
     function<pair<TOut, TKey> *(TIn)> mapFun;
+    function<int(TKey)> hashFun;
 
 public:
-    MapWorker(function<pair<TOut, TKey> *(TIn)> mapFun) : mapFun(mapFun)
+    MapWorker(
+        function<pair<TOut, TKey> *(TIn)> mapFun,
+        function<int(TKey)> hashFun) : mapFun(mapFun),
+                                       hashFun(hashFun)
     {
     }
 
@@ -57,9 +76,8 @@ public:
         // shuffle in reducers based on hash(key)
         for (int i = 0; i < mapped.size(); i++)
         {
-            std::hash<std::string> hasher;
-            auto hash = hasher(to_string(mapped[i]->second));
-            reducers[hash % reducers.size()]->add(mapped[i]);
+            auto hash = hashFun(mapped[i]->second);
+            reducers[hash % reducers.size()]->add(mapped[i], hash);
         }
     }
 };
@@ -70,6 +88,7 @@ class MapReduce
 private:
     function<pair<TOut, TKey> *(TIn)> mapFun;
     function<TOut(TOut, TOut)> reduceFun;
+    function<int(TKey)> hashFun;
 
     int mapWorkersCount;
     int reduceWorkersCount;
@@ -93,10 +112,13 @@ public:
         this->reduceFun = reduceFun;
     }
 
-    vector<pair<TOut, TKey>> run(vector<TIn> input)
+    void set_hash(function<int(TKey)> hashFun)
     {
-        auto result = vector<pair<TOut, TKey>>();
+        this->hashFun = hashFun;
+    }
 
+    vector<pair<TOut, TKey> *> run(vector<TIn> input)
+    {
         for (int i = 0; i < reduceWorkersCount; i++)
             reduceWorkers.push_back(new ReduceWorkder<TOut, TIn, TKey>(reduceFun));
 
@@ -106,7 +128,7 @@ public:
 
         for (int i = 0; i < mapWorkersCount; i++)
         {
-            auto mapWorker = MapWorker<TOut, TIn, TKey>(mapFun);
+            auto mapWorker = MapWorker<TOut, TIn, TKey>(mapFun, hashFun);
             mapWorker.initialize(input, chunkStart, chunkEnd, reduceWorkers);
             mapWorkers.push_back(mapWorker);
             chunkStart = chunkEnd;
@@ -115,8 +137,13 @@ public:
                 chunkEnd = input.size();
         }
 
+        auto result = vector<pair<TOut, TKey> *>();
+
         for (int i = 0; i < reduceWorkersCount; i++)
-            reduceWorkers[i]->reduce();
+        {
+            auto partials = reduceWorkers[i]->getPartialResults();
+            result.insert(result.end(), partials.begin(), partials.end());
+        }
 
         return result;
     }
@@ -133,11 +160,19 @@ int main(int argc, char *argv[])
         return left + right;
     });
 
+    mapReduce.set_hash([](auto key) {
+        return key;
+    });
+
     mapReduce.set_nw(10, 4);
 
     vector<int> vec;
     for (int i = 0; i < 100; i++)
         vec.push_back(i);
 
-    mapReduce.run(vec);
+    for (auto val : mapReduce.run(vec))
+    {
+        cout << val->first << " ";
+    }
+    cout << endl;
 }
