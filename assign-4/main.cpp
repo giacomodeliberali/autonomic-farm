@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include <functional>
-#include <map>
+#include <unordered_map>
 
 using namespace std;
 
@@ -12,7 +12,7 @@ class ReduceWorkder
 {
 private:
     function<TOut(TOut, TOut)> reduceFun;
-    map<int, pair<TOut, TKey> *> container;
+    unordered_map<int, pair<TOut, TKey> *> container;
 
 public:
     ReduceWorkder(function<TOut(TOut, TOut)> reduceFun) : reduceFun(reduceFun)
@@ -21,6 +21,7 @@ public:
 
     void add(pair<TOut, TKey> *p, int hash)
     {
+        //TODO: put in a thread safe queue
         // group by key then reduce
         auto key = container.find(hash);
         if (key != container.end())
@@ -48,7 +49,7 @@ public:
         return partialResults;
     }
 };
-
+ 
 template <class TOut, class TIn, class TKey>
 class MapWorker
 {
