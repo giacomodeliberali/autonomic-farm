@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include "ReduceWorker.hpp"
+#include "../Timer.hpp"
 #include <thread>
 
 using namespace std;
@@ -12,7 +13,9 @@ class MapWorker
 private:
     function<pair<TOut, TKey> *(TIn)> mapFun;
     function<int(TKey)> hashFun;
+    function<TOut(TOut, TOut)> reduceFun;
     thread *tid;
+    unordered_map<int, pair<TOut, TKey> *> container;
 
     vector<TIn> input;
     int start;
@@ -22,8 +25,10 @@ private:
 public:
     MapWorker(
         function<pair<TOut, TKey> *(TIn)> mapFun,
-        function<int(TKey)> hashFun) : mapFun(mapFun),
-                                       hashFun(hashFun)
+        function<int(TKey)> hashFun,
+        function<TOut(TOut, TOut)> reduceFun) : mapFun(mapFun),
+                                                hashFun(hashFun),
+                                                reduceFun(reduceFun)
     {
     }
 
@@ -38,13 +43,32 @@ public:
     void startThread()
     {
         tid = new std::thread([&]() {
+            //Timer t("MapWorker");
             for (int i = start; i < end; i++)
             {
+                this_thread::sleep_for(std::chrono::milliseconds(1));
                 auto pair = mapFun(input[i]);
 
                 // shuffle in reducers based on hash(key)
+                // but first compute a local reduce, to reduce comunication overhead
                 auto hash = hashFun(pair->second);
-                reducers[hash % reducers.size()]->add(pair, hash);
+                auto key = container.find(hash);
+                if (key != container.end())
+                {
+                    // exists
+                    auto reduced = this->reduceFun(container[hash]->first, pair->first);
+                    container[hash] = new std::pair(reduced, pair->second);
+                }
+                else
+                {
+                    // do not exist
+                    container.insert(std::pair(hash, pair));
+                }
+            }
+            for (auto &p : container)
+            {
+                auto hash = p.first;
+                reducers[hash % reducers.size()]->add(p.second, p.first);
             }
             for (auto &red : reducers)
                 red->add(NULL, 0);

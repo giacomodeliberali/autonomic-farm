@@ -55,7 +55,7 @@ public:
 
         for (int i = 0; i < mapWorkersCount; i++)
         {
-            auto mapWorker = new MapWorker<TOut, TIn, TKey>(mapFun, hashFun);
+            auto mapWorker = new MapWorker<TOut, TIn, TKey>(mapFun, hashFun, reduceFun);
             mapWorker->initialize(input, chunkStart, chunkEnd, reduceWorkers);
             mapWorkers.push_back(mapWorker);
             chunkStart = chunkEnd;

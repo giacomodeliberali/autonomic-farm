@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
     vector<ff_node *> reduceWorkers;
 
     auto mapFun = ([](auto input) {
+        //this_thread::sleep_for(std::chrono::milliseconds(100));
         return new pair(
             input * 2, // double the number
             input % 8  // even and odd numbers

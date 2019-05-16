@@ -5,6 +5,7 @@
 #include <functional>
 #include <unordered_map>
 #include "ThreadSafeQueue.hpp"
+#include "../Timer.hpp"
 #include <thread>
 
 using namespace std;
@@ -38,6 +39,7 @@ public:
     void start()
     {
         tid = new thread([&]() {
+            //Timer t("ReduceWorker");
             bool eos = false;
 
             while (!eos)
