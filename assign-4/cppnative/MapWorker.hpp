@@ -46,7 +46,7 @@ public:
             //Timer t("MapWorker");
             for (int i = start; i < end; i++)
             {
-                auto pair = mapFun(input[i]);
+                pair<TOut, TKey> *pair = mapFun(input[i]);
 
                 // shuffle in reducers based on hash(key)
                 // but first compute a local reduce, to decrease comunication overhead

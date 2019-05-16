@@ -12,3 +12,9 @@ seq:
 
 ff:
 	$(CXX)  -I ~/Code/personal/unipi/pd-systems/assign-4/fastflow $(CXXFLAGS) -o ffmapreduce fastflow/main.cpp 
+
+all:
+	make -B native && make -B ff && make -B seq
+
+test:
+	./seqmapreduce 100000 123 && ./nativemapreduce 8 100000 123 && ./ffmapreduce 8 100000 123

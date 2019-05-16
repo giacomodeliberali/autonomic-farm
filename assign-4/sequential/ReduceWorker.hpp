@@ -12,36 +12,36 @@ class ReduceWorkder
 {
 private:
     function<TOut(TOut, TOut)> reduceFun;
-    unordered_map<int, pair<TOut, TKey> *> container;
+    unordered_map<TKey, TOut> container;
 
 public:
     ReduceWorkder(function<TOut(TOut, TOut)> reduceFun) : reduceFun(reduceFun)
     {
     }
 
-    void add(pair<TOut, TKey> *p, int hash)
+    void add(pair<TOut, TKey> *p)
     {
-        auto key = container.find(hash);
+        auto key = container.find(p->second);
         if (key != container.end())
         {
             // exists
-            auto reduced = reduceFun(container[hash]->first, p->first);
-            container[hash] = new pair(reduced, p->second);
+            auto reduced = reduceFun(container[p->second], p->first);
+            container[p->second] = reduced;
         }
         else
         {
             // do not exist
-            container.insert(pair(hash, p));
+            container.insert(make_pair(p->second, p->first));
         }
     }
 
     vector<pair<TOut, TKey> *> getResults()
     {
-        vector<pair<TOut, TKey> *> partialResults;
+        vector<pair<TKey, TOut> *> partialResults;
 
-        for (auto reducedValue : container)
+        for (auto &p : container)
         {
-            partialResults.push_back(reducedValue.second);
+            partialResults.push_back(new pair(p.second, p.first));
         }
 
         return partialResults;

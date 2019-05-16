@@ -55,7 +55,7 @@ public:
     {
     }
 
-    pair<TKey, TOut> *svc(pair<TKey, TOut> *pair)
+    pair<TOut, TKey> *svc(pair<TKey, TOut> *pair)
     {
         if (pair != this->EOS)
         {
@@ -79,7 +79,7 @@ public:
             else
             {
                 // do not exist
-                container.insert(std::pair(hash, pair));
+                container.insert(make_pair(hash, pair));
             }
             return this->GO_ON;
         }

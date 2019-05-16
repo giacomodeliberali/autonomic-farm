@@ -31,10 +31,7 @@ public:
         for (auto i : input)
         {
             auto pair = mapFun(input[i]);
-
-            // shuffle in reducers based on hash(key)
-            auto hash = hashFun(pair->second);
-            reducer->add(pair, hash);
+            reducer->add(pair);
         }
     }
 };
