@@ -35,7 +35,7 @@ public:
             this->ff_send_out_to(pair, hash % nw);
         }
         for (int i = 0; i < nw; i++)
-            this->ff_send_out_to(NULL, i);
+            this->ff_send_out_to(this->EOS, i);
 
         return this->EOS;
     }
@@ -57,7 +57,7 @@ public:
 
     pair<TKey, TOut> *svc(pair<TKey, TOut> *pair)
     {
-        if (pair != NULL)
+        if (pair != this->EOS)
         {
             eosReceived++;
             auto nw = this->get_num_inchannels();
