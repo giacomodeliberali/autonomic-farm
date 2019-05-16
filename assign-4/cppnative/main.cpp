@@ -19,11 +19,18 @@ int main(int argc, char *argv[])
     int vecLength = atoi(argv[2]);
     int seed = atoi(argv[3]);
 
+    srand(seed);
+
     auto mapReduce = MapReduce<long, long, long>();
     mapReduce.set_map([nw](auto input) {
+        long i = 0;
+        while (i++ < 1000)
+        {
+            // simulate work
+        }
         return new pair(
             input * 2, // double the number
-            input % 8  // even and odd numbers
+            input % 8    // even and odd numbers
         );
     });
     mapReduce.set_reduce([](auto left, auto right) {
@@ -37,7 +44,7 @@ int main(int argc, char *argv[])
     mapReduce.set_nw(nw, nw);
 
     vector<long> vec;
-    srand (seed);
+    
     for (long i = 1; i <= vecLength; i++)
         vec.push_back(rand() % 500);
 

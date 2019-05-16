@@ -15,10 +15,10 @@ class ReduceWorkder
 {
 private:
     function<TOut(TOut, TOut)> reduceFun;
-    unordered_map<int, pair<TOut, TKey> *> container;
+    unordered_map<TKey, TOut> container;
 
     int mapWorkersCount;
-    ThreadSafeQueue<pair<pair<TOut, TKey> *, int>> *queue;
+    ThreadSafeQueue<pair<TKey, TOut> *> queue;
     thread *tid;
     int eosReceived = 0;
 
@@ -27,13 +27,13 @@ public:
                   int mapWorkersCount) : reduceFun(reduceFun),
                                          mapWorkersCount(mapWorkersCount)
     {
-        queue = new ThreadSafeQueue<pair<pair<TOut, TKey> *, int>>();
+        //queue = ThreadSafeQueue<pair<TOut, TKey> *>();
     }
 
-    void add(pair<TOut, TKey> *p, int hash)
+    void add(pair<TKey, TOut> *p)
     {
         // group by key then reduce
-        queue->push(pair(p, hash));
+        queue.push(p);
     }
 
     void start()
@@ -44,12 +44,9 @@ public:
 
             while (!eos)
             {
-                auto value = queue->pop();
+                pair<TKey, TOut> *p = queue.pop();
 
-                auto hash = value.second;
-                auto p = value.first;
-
-                if (p == NULL && hash == 0)
+                if (p == NULL)
                 {
                     eosReceived++;
                     if (eosReceived == mapWorkersCount)
@@ -57,17 +54,20 @@ public:
                     continue;
                 }
 
-                auto key = container.find(hash);
-                if (key != container.end())
+                TKey key = p->first;
+                TOut value = p->second;
+
+                auto found = container.find(key);
+                if (found != container.end())
                 {
                     // exists
-                    auto reduced = this->reduceFun(container[hash]->first, p->first);
-                    container[hash] = new pair(reduced, p->second);
+                    auto reduced = this->reduceFun(container[key], value);
+                    container[key] = reduced;
                 }
                 else
                 {
                     // do not exist
-                    container.insert(pair(hash, p));
+                    container.insert(make_pair(key, value));
                 }
             }
         });
@@ -82,9 +82,9 @@ public:
     {
         vector<pair<TOut, TKey> *> partialResults;
 
-        for (auto reducedValue : container)
+        for (auto &p : container)
         {
-            partialResults.push_back(reducedValue.second);
+            partialResults.push_back(new pair(p.second, p.first));
         }
 
         return partialResults;

@@ -15,7 +15,7 @@ private:
     function<int(TKey)> hashFun;
     function<TOut(TOut, TOut)> reduceFun;
     thread *tid;
-    unordered_map<int, pair<TOut, TKey> *> container;
+    unordered_map<TKey, TOut> container;
 
     vector<TIn> input;
     int start;
@@ -46,32 +46,29 @@ public:
             //Timer t("MapWorker");
             for (int i = start; i < end; i++)
             {
-                this_thread::sleep_for(std::chrono::milliseconds(1));
                 auto pair = mapFun(input[i]);
 
                 // shuffle in reducers based on hash(key)
-                // but first compute a local reduce, to reduce comunication overhead
-                auto hash = hashFun(pair->second);
-                auto key = container.find(hash);
-                if (key != container.end())
+                // but first compute a local reduce, to decrease comunication overhead
+
+                auto key = pair->second;
+                if (container.find(key) != container.end())
                 {
                     // exists
-                    auto reduced = this->reduceFun(container[hash]->first, pair->first);
-                    container[hash] = new std::pair(reduced, pair->second);
+                    container[key] = this->reduceFun(container[key], pair->first);
                 }
                 else
                 {
                     // do not exist
-                    container.insert(std::pair(hash, pair));
+                    container.insert(make_pair(key, pair->first));
                 }
             }
             for (auto &p : container)
             {
-                auto hash = p.first;
-                reducers[hash % reducers.size()]->add(p.second, p.first);
+                reducers[hashFun(p.first) % reducers.size()]->add(new std::pair(p.first, p.second));
             }
             for (auto &red : reducers)
-                red->add(NULL, 0);
+                red->add(NULL);
         });
     }
 
