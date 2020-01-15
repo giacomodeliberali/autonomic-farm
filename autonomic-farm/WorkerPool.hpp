@@ -6,6 +6,7 @@
 #include "ThreadSafeQueue.hpp"
 #include <vector>
 #include <iostream>
+#define END_OF_STREAM 0xffff
 
 using namespace std;
 
@@ -35,7 +36,7 @@ private:
 public:
     WorkerPool(MasterWorker<TIN, TOUT> *master, int nw, function<TOUT *(TIN *)> func) : master_(master)
     {
-        cout << "[Pool] Created" << endl;
+        cout << "\t[Pool] Created" << endl;
         for (auto i = 0; i < nw; i++)
         {
             auto worker = new DefaultWorker<TIN, TOUT>(this, func);
@@ -44,30 +45,21 @@ public:
         }
     }
 
-    bool has_available_worker()
+    void assign(TIN *task)
     {
-        return pool_.is_empty();
-    }
-
-    bool assign(TIN *task)
-    {
-        if (!has_available_worker())
-        {
-            return false;
-        }
-
         // pop a free worker
+        cout << "\t[Pool] waiting for an available worker..." << endl;
         auto worker = pool_.pop();
+        cout << "\t   [Pool] ...found!" << endl;
 
         // give it a task
         worker->accept(task);
-
-        return true;
     }
 
     void collect(DefaultWorker<TIN, TOUT> *worker, TOUT *result)
     {
         pool_.push(worker);
+        cout << "\t[Pool] Pushing an available worker. Now availables = " << pool_.size() << endl;
         master_->collect(result);
     }
 
@@ -78,6 +70,7 @@ public:
 
         for (auto worker : pool_.pop_all())
         {
+            worker->accept((TIN *)END_OF_STREAM);
             worker->join();
             count++;
         }

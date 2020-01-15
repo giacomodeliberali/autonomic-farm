@@ -30,7 +30,6 @@ public:
     {
         if (index_ < vector_->size())
         {
-            cout << "[DefaultEmitter] get_next()" << endl;
             // There is more data in the array, return the current index position
             // and increase the index to the next position
             return vector_->at(index_++);

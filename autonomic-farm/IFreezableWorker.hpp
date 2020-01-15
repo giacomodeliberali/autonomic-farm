@@ -95,6 +95,11 @@ public:
     {
         thread_.join();
     }
+
+    ~IFreezableWorker()
+    {
+        cout << "[~IFreezableWorker]::destructor" << endl;
+    }
 };
 
 #endif

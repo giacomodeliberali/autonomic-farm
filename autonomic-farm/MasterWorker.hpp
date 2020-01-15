@@ -29,15 +29,11 @@ protected:
         int prevCollectedTask = 0;
 
         auto next = emitter_->get_next();
-        while (next != NULL)
+        while (next != nullptr)
         {
-            cout << "NEXT => " << *next << endl;
-            if (this->pool_->has_available_worker())
-            {
-                this->pool_->assign(next);
-                collectedTasks++;
-                next = emitter_->get_next();
-            }
+            this->pool_->assign(next);
+            collectedTasks++;
+            next = emitter_->get_next();
         }
 
         cout << "[Master] join all" << endl;

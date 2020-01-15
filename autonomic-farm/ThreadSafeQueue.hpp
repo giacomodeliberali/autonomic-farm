@@ -56,6 +56,12 @@ public:
         }
         return content;
     }
+
+    int size()
+    {
+        std::unique_lock<std::mutex> lock(this->d_mutex);
+        return this->d_queue.size();
+    }
 };
 
 #endif
