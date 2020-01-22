@@ -19,38 +19,31 @@ private:
 
 protected:
     // The code to be executed from the master worker in its own thread
-    void run() override
-    {
-
-        cout << "[Master] run()" << endl;
-
-        int taskNumber = 0;
-        int collectedTasks = 0;
-        int prevCollectedTask = 0;
-
+    void run() override{
         auto next = emitter_->get_next();
         while (next != nullptr)
         {
             this->pool_->assign(next);
-            collectedTasks++;
             next = emitter_->get_next();
         }
 
-        cout << "[Master] join all" << endl;
-        pool_->join_all();
+        auto joined_workers = pool_->join_all();
+        
+        cout << "[Master] joined all (" << joined_workers << "). Sum = " << sum << endl;
     };
 
 public:
     MasterWorker(IEmitter<TIN> *emitter, int nw, function<TOUT *(TIN *)> func) : emitter_(emitter)
     {
-        cout << "[Master] Created" << endl;
         pool_ = new WorkerPool(this, nw, func);
     }
 
+    int sum = 0;
     void collect(TOUT *result)
     {
         // notify monitor
-        cout << "Master collected: " << *result << endl;
+        sum += *result;
+        //cout << "Master collected: " << *result << endl;
     }
 };
 

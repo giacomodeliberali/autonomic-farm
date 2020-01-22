@@ -27,6 +27,9 @@ class WorkerPool
 {
 
 private:
+
+    int nw_;
+
     // Workers pool
     ThreadSafeQueue<DefaultWorker<TIN, TOUT> *> pool_;
 
@@ -34,23 +37,22 @@ private:
     MasterWorker<TIN, TOUT> *master_;
 
 public:
-    WorkerPool(MasterWorker<TIN, TOUT> *master, int nw, function<TOUT *(TIN *)> func) : master_(master)
+    WorkerPool(MasterWorker<TIN, TOUT> *master, int nw, function<TOUT *(TIN *)> func) : master_(master), nw_(nw)
     {
-        cout << "\t[Pool] Created" << endl;
-        for (auto i = 0; i < nw; i++)
+        for (auto i = 0; i < nw_; i++)
         {
-            auto worker = new DefaultWorker<TIN, TOUT>(this, func);
+            auto worker = new DefaultWorker<TIN, TOUT>(this, func, i + 1);
             pool_.push(worker);
             worker->start();
         }
+        pool_.notify();
     }
 
     void assign(TIN *task)
     {
-        // pop a free worker
-        cout << "\t[Pool] waiting for an available worker..." << endl;
+        // pop a free worker or wait
         auto worker = pool_.pop();
-        cout << "\t   [Pool] ...found!" << endl;
+        //cout << "\t   [Pool] assign " << *task << endl;
 
         // give it a task
         worker->accept(task);
@@ -59,13 +61,24 @@ public:
     void collect(DefaultWorker<TIN, TOUT> *worker, TOUT *result)
     {
         pool_.push(worker);
-        cout << "\t[Pool] Pushing an available worker. Now availables = " << pool_.size() << endl;
-        master_->collect(result);
+        if (result != nullptr)
+        {
+            cout << "\t[Pool] collect " << *result << " from " << worker->id_ << " poolsize=" << pool_.size() << endl;
+            master_->collect(result);
+        }
+        pool_.notify();
+        task_condition.notify_one();
     }
 
+    mutex task_mutex;
+    condition_variable task_condition;
     // Joins all workers and return their number
     int join_all()
     {
+        unique_lock<mutex> lock(this->task_mutex);
+        if (pool_.size() != nw_)
+            this->task_condition.wait(lock, [=] { return pool_.size() == nw_; });
+
         int count = 0;
 
         for (auto worker : pool_.pop_all())

@@ -35,7 +35,7 @@ protected:
 
     void run() override
     {
-        cout << "\t\t[Worker] run()" << endl;
+        //cout << "\t\t[Worker] run()" << endl;
 
         bool eos = false;
 
@@ -45,32 +45,44 @@ protected:
 
             if (task_ == (TIN *)END_OF_STREAM)
             {
-                cout << "\t\t[Worker] received END_OF_STREAM. Terminating..." << endl;
-                return;
+                //cout << "\t\t[Worker] accept EOF " << endl;
+                eos = true;
+                //cout << "\t\t[Worker] received END_OF_STREAM. Terminating..." << endl;
+                pool_->collect(this, (TOUT *)nullptr);
+                continue;
             }
-
-            cout << "\t\t[Worker] received a task. Computing..." << endl;
+            //cout << "\t\t[Worker " << id_ << "] accept task " << *task_ << endl;
 
             // Compute result
             auto result = func_(task_);
 
             // Notify to pool
+            //cout << "\t\t[Worker " << id_ << "] collect me " << endl;
             pool_->collect(this, result);
+
+            updateTask(nullptr);
         }
     }
 
-public:
-    DefaultWorker(WorkerPool<TIN, TOUT> *pool, function<TOUT *(TIN *)> func) : pool_(pool), func_(func)
+    void updateTask(TIN *new_task)
     {
-        cout << "\t\t[Worker] Created" << endl;
+        {
+            unique_lock<mutex> lock(this->task_mutex);
+            task_ = new_task;
+        }
+        this->task_condition.notify_one();
+    }
+
+public:
+    int id_;
+
+    DefaultWorker(WorkerPool<TIN, TOUT> *pool, function<TOUT *(TIN *)> func, int id) : pool_(pool), func_(func), id_(id)
+    {
     }
 
     void accept(TIN *task)
     {
-
-        unique_lock<mutex> lock(this->task_mutex);
-        task_ = task;
-        this->task_condition.notify_one();
+        updateTask(task);
     }
 };
 

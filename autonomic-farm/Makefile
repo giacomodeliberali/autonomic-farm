@@ -1,5 +1,5 @@
 build:
-	g++ -std=c++17 main.cpp -lpthread
+	g++ -g --debug -std=c++17 main.cpp -lpthread -o farm.out
 
 run:
-	./a.out
+	./farm.out

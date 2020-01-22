@@ -22,10 +22,12 @@ public:
 
     void push(T const &value)
     {
-        {
-            std::unique_lock<std::mutex> lock(this->d_mutex);
-            d_queue.push_front(value);
-        }
+        std::unique_lock<std::mutex> lock(this->d_mutex);
+        d_queue.push_front(value);
+    }
+
+    void notify(){
+        std::unique_lock<std::mutex> lock(this->d_mutex);
         this->d_condition.notify_one();
     }
 
