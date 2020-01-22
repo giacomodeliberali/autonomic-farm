@@ -27,7 +27,6 @@ public:
     }
 
     void notify(){
-        std::unique_lock<std::mutex> lock(this->d_mutex);
         this->d_condition.notify_one();
     }
 

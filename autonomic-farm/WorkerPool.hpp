@@ -27,7 +27,6 @@ class WorkerPool
 {
 
 private:
-
     int nw_;
 
     // Workers pool
@@ -58,26 +57,31 @@ public:
         worker->accept(task);
     }
 
+    mutex collect_mutex;
     void collect(DefaultWorker<TIN, TOUT> *worker, TOUT *result)
     {
+        // unique_lock<mutex> lock(this->collect_mutex);
+        // some threads do not join the pool once their task is done. Why?
+     
         pool_.push(worker);
-        if (result != nullptr)
+        if (result != (TOUT *)END_OF_STREAM)
         {
             cout << "\t[Pool] collect " << *result << " from " << worker->id_ << " poolsize=" << pool_.size() << endl;
             master_->collect(result);
         }
+
         pool_.notify();
-        task_condition.notify_one();
+        all_joined_condition.notify_one();
     }
 
-    mutex task_mutex;
-    condition_variable task_condition;
+    mutex join_all_mutex;
+    condition_variable all_joined_condition;
     // Joins all workers and return their number
     int join_all()
     {
-        unique_lock<mutex> lock(this->task_mutex);
+        unique_lock<mutex> lock(this->join_all_mutex);
         if (pool_.size() != nw_)
-            this->task_condition.wait(lock, [=] { return pool_.size() == nw_; });
+            this->all_joined_condition.wait(lock, [=] { return pool_.size() == nw_; });
 
         int count = 0;
 

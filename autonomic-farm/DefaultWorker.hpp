@@ -48,7 +48,7 @@ protected:
                 //cout << "\t\t[Worker] accept EOF " << endl;
                 eos = true;
                 //cout << "\t\t[Worker] received END_OF_STREAM. Terminating..." << endl;
-                pool_->collect(this, (TOUT *)nullptr);
+                pool_->collect(this, (TOUT *)END_OF_STREAM);
                 continue;
             }
             //cout << "\t\t[Worker " << id_ << "] accept task " << *task_ << endl;
