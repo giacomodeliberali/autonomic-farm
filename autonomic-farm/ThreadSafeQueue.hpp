@@ -26,7 +26,8 @@ public:
         d_queue.push_front(value);
     }
 
-    void notify(){
+    void notify()
+    {
         this->d_condition.notify_one();
     }
 
@@ -47,10 +48,11 @@ public:
 
     vector<T> pop_all()
     {
-        vector<T> content;
         unique_lock<mutex> lock(this->d_mutex);
+        vector<T> content;
         this->d_condition.wait(lock, [=] { return !this->d_queue.empty(); });
-        for (int i = 0; i < d_queue.size(); i++)
+        int size = d_queue.size();
+        for (int i = 0; i < size; i++)
         {
             content.push_back(move(this->d_queue.front()));
             this->d_queue.pop_front();

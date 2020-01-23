@@ -17,8 +17,10 @@ private:
     void wait_for_task()
     {
         unique_lock<mutex> lock(this->task_mutex);
-        if (task_ == nullptr)
+        if (task_ == nullptr){
+            //cout << "\t\t[Worker " << id_ << "] waiting a task " << endl;
             this->task_condition.wait(lock, [=] { return this->task_ != nullptr; });
+        }
     }
 
 protected:
@@ -51,26 +53,17 @@ protected:
                 pool_->collect(this, (TOUT *)END_OF_STREAM);
                 continue;
             }
-            //cout << "\t\t[Worker " << id_ << "] accept task " << *task_ << endl;
+            //cout << "\t\t[Worker " << id_ << "] compute task " << *task_ << endl;
 
             // Compute result
             auto result = func_(task_);
 
+            // Set to null
+            task_ = nullptr;
+
             // Notify to pool
-            //cout << "\t\t[Worker " << id_ << "] collect me " << endl;
             pool_->collect(this, result);
-
-            updateTask(nullptr);
         }
-    }
-
-    void updateTask(TIN *new_task)
-    {
-        {
-            unique_lock<mutex> lock(this->task_mutex);
-            task_ = new_task;
-        }
-        this->task_condition.notify_one();
     }
 
 public:
@@ -82,7 +75,13 @@ public:
 
     void accept(TIN *task)
     {
-        updateTask(task);
+        //if (task != (TIN *)END_OF_STREAM)
+        //cout << "\t\t[Worker " << id_ << "] accept task " << *task << endl;
+        {
+            unique_lock<mutex> lock(this->task_mutex);
+            task_ = task;
+        }
+        this->task_condition.notify_one();
     }
 };
 

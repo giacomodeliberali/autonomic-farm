@@ -5,13 +5,12 @@ using namespace std;
 
 //FIXME: refactor
 auto activewait = [](int *x) -> int * {
-    
     auto start = chrono::high_resolution_clock::now();
     while (true)
     {
         auto elapsed = chrono::high_resolution_clock::now() - start;
         long long milliseconds = chrono::duration_cast<chrono::milliseconds>(elapsed).count();
-        if (milliseconds >= 500) // 1 sec
+        if (milliseconds >= 10) // 1 sec
             break;
     }
 
@@ -20,16 +19,12 @@ auto activewait = [](int *x) -> int * {
 
 vector<int *> *getInputVector()
 {
-    const int SECTION_SIZE = 10;
+    const int SECTION_SIZE = 1000;
     vector<int *> *vec = new vector<int *>();
 
-    cout << "Array: ";
-    for (int i = 1; i < SECTION_SIZE; i++)
-    {
-        cout << i<<" ";
+    cout << "Array: " << SECTION_SIZE << endl;
+    for (int i = 1; i <= SECTION_SIZE; i++)
         vec->push_back(new int(i));
-    }
-    cout << endl;
 
     return vec;
 }
@@ -37,7 +32,7 @@ vector<int *> *getInputVector()
 int main()
 {
 
-    int nw = 1;
+    int nw = 4;
     cout << "[main.cpp] Initial nw =  " << nw << endl;
 
     auto start = chrono::high_resolution_clock::now();

@@ -19,16 +19,21 @@ private:
 
 protected:
     // The code to be executed from the master worker in its own thread
-    void run() override{
-        auto next = emitter_->get_next();
-        while (next != nullptr)
+    void run() override
+    {
+        bool has_more_items = true;
+        while (has_more_items)
         {
-            this->pool_->assign(next);
-            next = emitter_->get_next();
+            //if (pool_->hasAvailableWorkers())
+            //{
+                auto next = emitter_->get_next();
+                if (next != nullptr)
+                    this->pool_->assign(next);
+                else
+                    has_more_items = false;
+            //}
         }
-
         auto joined_workers = pool_->join_all();
-        
         cout << "[Master] joined all (" << joined_workers << "). Sum = " << sum << endl;
     };
 
