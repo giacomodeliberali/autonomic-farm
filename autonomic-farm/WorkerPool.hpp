@@ -27,7 +27,8 @@ class WorkerPool
 {
 
 private:
-    int nw_;
+    // The initial value of concurrency
+    int initial_nw_;
 
     // Workers pool
     ThreadSafeQueue<DefaultWorker<TIN, TOUT> *> pool_queue_;
@@ -35,10 +36,19 @@ private:
     // The master worker that own this pool
     MasterWorker<TIN, TOUT> *master_;
 
+    // The mutex used to ensure the collect is called thread-safe
+    mutex collect_mutex;
+
+    // The mutex used to lock the pool until all threads have joined
+    mutex join_all_mutex;
+
+    // The condition variable used to wait until all threads have completed (also by EOS)
+    condition_variable all_joined_condition;
+
 public:
-    WorkerPool(MasterWorker<TIN, TOUT> *master, int nw, function<TOUT *(TIN *)> func) : master_(master), nw_(nw)
+    WorkerPool(MasterWorker<TIN, TOUT> *master, int nw, function<TOUT *(TIN *)> func) : master_(master), initial_nw_(nw)
     {
-        for (auto i = 0; i < nw_; i++)
+        for (auto i = 0; i < initial_nw_; i++)
         {
             auto worker = new DefaultWorker<TIN, TOUT>(this, func, i + 1);
             pool_queue_.push(worker);
@@ -47,18 +57,18 @@ public:
         pool_queue_.notify();
     }
 
+    // Assign a task to free worker or waits until one is available.
     void assign(TIN *task)
     {
         // pop a free worker or wait
         auto worker = pool_queue_.pop();
         pool_queue_.notify();
-        //cout << "\t   [Pool] assign " << *task << endl;
 
         // give it a task
         worker->accept(task);
     }
 
-    mutex collect_mutex;
+    // Collect the result from a worker and make it availabe again to receive another task.
     void collect(DefaultWorker<TIN, TOUT> *worker, TOUT *result)
     {
         pool_queue_.push(worker);
@@ -75,16 +85,14 @@ public:
         all_joined_condition.notify_one();
     }
 
-    mutex join_all_mutex;
-    condition_variable all_joined_condition;
     // Joins all workers and return their number
     int join_all()
     {
         unique_lock<mutex> lock(this->join_all_mutex);
-        if (pool_queue_.size() != nw_)
+        if (pool_queue_.size() != initial_nw_)
             this->all_joined_condition.wait(lock, [=] {
                 int pool_size = pool_queue_.size();
-                return pool_size == nw_;
+                return pool_size == initial_nw_;
             });
 
         int count = 0;

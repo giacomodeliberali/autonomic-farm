@@ -26,6 +26,7 @@ public:
         d_queue.push_front(value);
     }
 
+    // Notify that the size of the queue has changed
     void notify()
     {
         this->d_condition.notify_one();
