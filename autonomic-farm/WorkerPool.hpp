@@ -61,14 +61,14 @@ public:
     mutex collect_mutex;
     void collect(DefaultWorker<TIN, TOUT> *worker, TOUT *result)
     {
-        // unique_lock<mutex> lock(this->collect_mutex);
-        // some threads do not join the pool once their task is done. Why?
-
         pool_queue_.push(worker);
         if (result != (TOUT *)END_OF_STREAM)
         {
-            // cout << "\t[Pool] collect " << *result << " from " << worker->id_ << " poolsize=" << pool_queue_.size() << endl;
-            master_->collect(result);
+            {
+                // ensure the collect is called in a thread-safe fashon
+                unique_lock<mutex> lock(this->collect_mutex);
+                master_->collect(result);
+            }
         }
 
         pool_queue_.notify();

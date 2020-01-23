@@ -2,15 +2,16 @@
 #include "WorkerPool.hpp"
 #include "DefaultEmitter.hpp"
 using namespace std;
+using namespace chrono;
 
 //FIXME: refactor
 auto activewait = [](int *x) -> int * {
-    auto start = chrono::high_resolution_clock::now();
+    auto start = high_resolution_clock::now();
     while (true)
     {
-        auto elapsed = chrono::high_resolution_clock::now() - start;
-        long long milliseconds = chrono::duration_cast<chrono::milliseconds>(elapsed).count();
-        if (milliseconds >= 10) // 1 sec
+        auto elapsed = high_resolution_clock::now() - start;
+        long long ns = duration_cast<nanoseconds>(elapsed).count();
+        if (ns >= *x * 1000)
             break;
     }
 
@@ -19,7 +20,7 @@ auto activewait = [](int *x) -> int * {
 
 vector<int *> *getInputVector()
 {
-    const int SECTION_SIZE = 1000;
+    const int SECTION_SIZE = 10000;
     vector<int *> *vec = new vector<int *>();
 
     cout << "Array: " << SECTION_SIZE << endl;
@@ -32,7 +33,7 @@ vector<int *> *getInputVector()
 int main()
 {
 
-    int nw = 4;
+    int nw = 8;
     cout << "[main.cpp] Initial nw =  " << nw << endl;
 
     auto start = chrono::high_resolution_clock::now();

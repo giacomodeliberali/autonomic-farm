@@ -24,14 +24,11 @@ protected:
         bool has_more_items = true;
         while (has_more_items)
         {
-            //if (pool_->hasAvailableWorkers())
-            //{
-                auto next = emitter_->get_next();
-                if (next != nullptr)
-                    this->pool_->assign(next);
-                else
-                    has_more_items = false;
-            //}
+            auto next = emitter_->get_next();
+            if (next != nullptr)
+                this->pool_->assign(next);
+            else
+                has_more_items = false;
         }
         auto joined_workers = pool_->join_all();
         cout << "[Master] joined all (" << joined_workers << "). Sum = " << sum << endl;
