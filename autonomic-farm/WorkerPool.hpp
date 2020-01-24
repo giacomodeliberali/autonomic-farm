@@ -100,6 +100,12 @@ public:
 
         return count;
     }
+
+    int get_actual_workers_number()
+    {
+        //TODO: add logic 
+        return initial_nw_;
+    }
 };
 
 #endif

@@ -6,6 +6,7 @@
 #include "IEmitter.hpp"
 #include "WorkerPool.hpp"
 #include "Collector.hpp"
+#include "Monitor.hpp"
 #include <vector>
 #include <iostream>
 
@@ -18,6 +19,7 @@ private:
     IEmitter<TIN> *emitter_;
     WorkerPool<TIN, TOUT> *pool_;
     Collector<TOUT> *collector_;
+    Monitor<TIN, TOUT> *monitor_;
 
     // Stick current thread on a core
     void stick()
@@ -34,6 +36,7 @@ public:
     MasterWorker(IEmitter<TIN> *emitter, int nw, function<TOUT *(TIN *)> func) : emitter_(emitter)
     {
         pool_ = new WorkerPool(this, nw, func);
+        monitor_ = new Monitor(pool_);
         collector_ = new Collector<TOUT>();
         this->stick();
     }
@@ -41,11 +44,13 @@ public:
     void collect(TOUT *result)
     {
         collector_->collect(result);
+        monitor_->notify();
     }
 
     // The code to be executed from the master worker
     MasterWorker<TIN, TOUT> *run()
     {
+        monitor_->init();
         bool has_more_items = true;
         while (has_more_items)
         {
@@ -55,8 +60,9 @@ public:
             else
                 has_more_items = false;
         }
-        auto joined_workers = pool_->join_all();
-        cout << "[Master] joined all (" << joined_workers << ")" << endl;
+
+        // auto joined_workers = pool_->join_all();
+        //cout << "[Master] joined all (" << joined_workers << ")" << endl;
 
         return this;
     };

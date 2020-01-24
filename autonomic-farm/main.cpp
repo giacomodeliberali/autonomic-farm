@@ -53,12 +53,10 @@ int main(int argc, char *argv[])
     int nw = atoi(argv[1]);
     //float throughput = atof(argv[2]);
 
-    cout << "[main.cpp] Initial nw =  " << nw << endl;
-
     auto emitter = new DefaultEmitter<int>(getInputVector());
     auto master = new MasterWorker<int, int>(emitter, nw, activewait);
 
-    Timer t("Farm");
+    // Timer t("Farm");
     auto results = master
                        ->run()
                        ->get_results();
