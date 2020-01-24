@@ -5,6 +5,7 @@
 #include "DefaultWorker.hpp"
 #include "IEmitter.hpp"
 #include "WorkerPool.hpp"
+#include "Collector.hpp"
 #include <vector>
 #include <iostream>
 
@@ -16,14 +17,12 @@ class MasterWorker
 private:
     IEmitter<TIN> *emitter_;
     WorkerPool<TIN, TOUT> *pool_;
-
-    // The mutex used to ensure the collect is called thread-safe
-    mutex collect_mutex;
+    Collector<TOUT> *collector_;
 
     // Stick current thread on a core
     void stick()
     {
-/*         cpu_set_t cpuset;
+        /*         cpu_set_t cpuset;
         CPU_ZERO(&cpuset);
         CPU_SET(sched_getcpu(), &cpuset);
 
@@ -31,9 +30,21 @@ private:
         pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset); */
     }
 
-protected:
+public:
+    MasterWorker(IEmitter<TIN> *emitter, int nw, function<TOUT *(TIN *)> func) : emitter_(emitter)
+    {
+        pool_ = new WorkerPool(this, nw, func);
+        collector_ = new Collector<TOUT>();
+        this->stick();
+    }
+
+    void collect(TOUT *result)
+    {
+        collector_->collect(result);
+    }
+
     // The code to be executed from the master worker
-    void run()
+    MasterWorker<TIN, TOUT> *run()
     {
         bool has_more_items = true;
         while (has_more_items)
@@ -45,23 +56,14 @@ protected:
                 has_more_items = false;
         }
         auto joined_workers = pool_->join_all();
-        cout << "[Master] joined all (" << joined_workers << "). Sum = " << sum << endl;
+        cout << "[Master] joined all (" << joined_workers << ")" << endl;
+
+        return this;
     };
 
-public:
-    MasterWorker(IEmitter<TIN> *emitter, int nw, function<TOUT *(TIN *)> func) : emitter_(emitter)
+    vector<TOUT *> *get_results()
     {
-        pool_ = new WorkerPool(this, nw, func);
-        this->stick();
-        this->run();
-    }
-
-    long long sum = 0;
-    void collect(TOUT *result)
-    {
-        // ensure the collect is called in a thread-safe fashon
-        unique_lock<mutex> lock(this->collect_mutex);
-        sum += *result;
+        return this->collector_->get_results();
     }
 };
 

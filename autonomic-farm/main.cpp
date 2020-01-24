@@ -1,6 +1,8 @@
 #include "MasterWorker.hpp"
 #include "WorkerPool.hpp"
 #include "DefaultEmitter.hpp"
+#include "Timer.hpp"
+
 using namespace std;
 
 //FIXME: refactor
@@ -41,6 +43,7 @@ vector<int *> *getInputVector()
 
 int main(int argc, char *argv[])
 {
+
     if (argc < 2)
     {
         cout << "Usage is: [nw] [throughput] " << endl;
@@ -52,14 +55,11 @@ int main(int argc, char *argv[])
 
     cout << "[main.cpp] Initial nw =  " << nw << endl;
 
-    auto start = chrono::high_resolution_clock::now();
-
     auto emitter = new DefaultEmitter<int>(getInputVector());
     auto master = new MasterWorker<int, int>(emitter, nw, activewait);
-    /*     master->start();
-    master->join(); */
-    auto elapsed = chrono::high_resolution_clock::now() - start;
-    long long milliseconds = chrono::duration_cast<chrono::milliseconds>(elapsed).count();
 
-    cout << "[main.cpp] Ended in " << milliseconds << " ms" << endl;
+    Timer t("Farm");
+    auto results = master
+                       ->run()
+                       ->get_results();
 }
