@@ -30,8 +30,17 @@ private:
     // The initial value of concurrency
     int initial_nw_;
 
-    // Workers pool
-    ThreadSafeQueue<DefaultWorker<TIN, TOUT> *> pool_queue_;
+    // The total amount of spawned workers
+    int total_spawned_workers;
+
+    // The function this pool workers have to compute
+    function<TOUT *(TIN *)> func_;
+
+    // Available workers pool
+    ThreadSafeQueue<DefaultWorker<TIN, TOUT> *> available_workers_pool_;
+
+    // Freezed workers pool
+    ThreadSafeQueue<DefaultWorker<TIN, TOUT> *> waiting_workers_pool_;
 
     // The master worker that own this pool
     MasterWorker<TIN, TOUT> *master_;
@@ -43,23 +52,18 @@ private:
     condition_variable all_joined_condition;
 
 public:
-    WorkerPool(MasterWorker<TIN, TOUT> *master, int nw, function<TOUT *(TIN *)> func) : master_(master), initial_nw_(nw)
+    WorkerPool(MasterWorker<TIN, TOUT> *master, int nw, function<TOUT *(TIN *)> func) : master_(master), func_(func), initial_nw_(nw)
     {
         for (auto i = 0; i < initial_nw_; i++)
-        {
-            auto worker = new DefaultWorker<TIN, TOUT>(this, func, i + 1);
-            pool_queue_.push(worker);
-            worker->start();
-        }
-        pool_queue_.notify();
+            this->add_worker();
     }
 
     // Assign a task to free worker or waits until one is available.
     void assign(TIN *task)
     {
         // pop a free worker or wait
-        auto worker = pool_queue_.pop();
-        pool_queue_.notify();
+        auto worker = available_workers_pool_.pop();
+        available_workers_pool_.notify();
 
         // give it a task
         worker->accept(task);
@@ -68,43 +72,93 @@ public:
     // Collect the result from a worker and make it availabe again to receive another task.
     void collect(DefaultWorker<TIN, TOUT> *worker, TOUT *result)
     {
-        pool_queue_.push(worker);
         if (result != (TOUT *)END_OF_STREAM)
         {
+            available_workers_pool_.push(worker);
+            available_workers_pool_.notify();
             master_->collect(result);
+            all_joined_condition.notify_one();
         }
-
-        pool_queue_.notify();
-        all_joined_condition.notify_one();
     }
 
     // Joins all workers and return their number
     int join_all()
     {
         unique_lock<mutex> lock(this->join_all_mutex);
-        if (pool_queue_.size() != initial_nw_)
-            this->all_joined_condition.wait(lock, [=] {
-                int pool_size = pool_queue_.size();
-                return pool_size == initial_nw_;
+
+        int total_oes_sent = 0;
+
+        int available_pool_size = available_workers_pool_.size();
+        int waiting_pool_size = waiting_workers_pool_.size();
+
+        if (available_pool_size != (total_spawned_workers - waiting_pool_size))
+            this->all_joined_condition.wait(lock, [&] {
+                available_pool_size = available_workers_pool_.size();
+                return available_pool_size == (total_spawned_workers - waiting_pool_size);
             });
 
-        int count = 0;
-        auto workers = pool_queue_.pop_all();
-
-        for (auto worker : workers)
+        if (waiting_pool_size > 0)
         {
-            worker->accept((TIN *)END_OF_STREAM);
-            worker->join();
-            count++;
+            auto workers = waiting_workers_pool_.pop_all();
+            for (auto worker : workers)
+            {
+                worker->accept((TIN *)END_OF_STREAM);
+                worker->join();
+                total_oes_sent++;
+            }
         }
 
-        return count;
+        auto workers = available_workers_pool_.pop_all();
+        for (auto worker : workers)
+        {
+            if (worker)
+                worker->accept((TIN *)END_OF_STREAM);
+            worker->join();
+            total_oes_sent++;
+        }
+
+        return total_oes_sent;
     }
 
     int get_actual_workers_number()
     {
-        //TODO: add logic 
-        return initial_nw_;
+        return available_workers_pool_.size();
+    }
+
+    void add_worker()
+    {
+        if (total_spawned_workers >= 8)
+            return;
+
+        if (!waiting_workers_pool_.is_empty())
+        {
+            auto worker = waiting_workers_pool_.pop();
+            available_workers_pool_.push(worker);
+        }
+        else
+        {
+            auto worker = new DefaultWorker<TIN, TOUT>(this, func_);
+            available_workers_pool_.push(worker);
+            worker->start();
+            total_spawned_workers++;
+        }
+        available_workers_pool_.notify();
+        waiting_workers_pool_.notify();
+    }
+
+    void remove_worker()
+    {
+        int pool_size = available_workers_pool_.size();
+        if (pool_size <= 1)
+            return;
+
+        if (!available_workers_pool_.is_empty())
+        {
+            auto worker = available_workers_pool_.pop();
+            waiting_workers_pool_.push(worker);
+        }
+        available_workers_pool_.notify();
+        waiting_workers_pool_.notify();
     }
 };
 

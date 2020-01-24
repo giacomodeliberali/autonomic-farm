@@ -17,9 +17,10 @@ private:
     void wait_for_task()
     {
         unique_lock<mutex> lock(this->task_mutex);
-        if (task_ == nullptr){
+        if (task_ == nullptr)
+        {
             //cout << "\t\t[Worker " << id_ << "] waiting a task " << endl;
-            this->task_condition.wait(lock, [=] { return this->task_ != nullptr; });
+            this->task_condition.wait(lock, [&] { return this->task_ != nullptr; });
         }
     }
 
@@ -67,9 +68,7 @@ protected:
     }
 
 public:
-    int id_;
-
-    DefaultWorker(WorkerPool<TIN, TOUT> *pool, function<TOUT *(TIN *)> func, int id) : pool_(pool), func_(func), id_(id)
+    DefaultWorker(WorkerPool<TIN, TOUT> *pool, function<TOUT *(TIN *)> func) : pool_(pool), func_(func)
     {
     }
 
@@ -77,10 +76,8 @@ public:
     {
         //if (task != (TIN *)END_OF_STREAM)
         //cout << "\t\t[Worker " << id_ << "] accept task " << *task << endl;
-        {
-            unique_lock<mutex> lock(this->task_mutex);
-            task_ = task;
-        }
+        unique_lock<mutex> lock(this->task_mutex);
+        task_ = task;
         this->task_condition.notify_one();
     }
 };

@@ -61,8 +61,8 @@ public:
                 has_more_items = false;
         }
 
-        // auto joined_workers = pool_->join_all();
-        //cout << "[Master] joined all (" << joined_workers << ")" << endl;
+        auto joined_workers = pool_->join_all();
+        cout << "[Master] joined all (" << joined_workers << ")" << endl;
 
         return this;
     };

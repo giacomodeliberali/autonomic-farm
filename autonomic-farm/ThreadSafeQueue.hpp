@@ -15,7 +15,7 @@ class ThreadSafeQueue
 private:
     mutex d_mutex;
     condition_variable d_condition;
-    deque<T> d_queue;
+    vector<T> vector_;
 
 public:
     ThreadSafeQueue() {}
@@ -23,7 +23,7 @@ public:
     void push(T const &value)
     {
         std::unique_lock<std::mutex> lock(this->d_mutex);
-        d_queue.push_front(value);
+        vector_.push_back(value);
     }
 
     // Notify that the size of the queue has changed
@@ -35,28 +35,28 @@ public:
     T pop()
     {
         std::unique_lock<std::mutex> lock(this->d_mutex);
-        this->d_condition.wait(lock, [=] { return !this->d_queue.empty(); });
-        T rc(std::move(this->d_queue.back()));
-        this->d_queue.pop_back();
+        this->d_condition.wait(lock, [=] { return !this->vector_.empty(); });
+        T rc(std::move(this->vector_.back()));
+        this->vector_.pop_back();
         return rc;
     }
 
     bool is_empty()
     {
         std::unique_lock<std::mutex> lock(this->d_mutex);
-        return (d_queue.empty());
+        return (vector_.empty());
     }
 
     vector<T> pop_all()
     {
         unique_lock<mutex> lock(this->d_mutex);
         vector<T> content;
-        this->d_condition.wait(lock, [=] { return !this->d_queue.empty(); });
-        int size = d_queue.size();
+        this->d_condition.wait(lock, [=] { return !this->vector_.empty(); });
+        int size = vector_.size();
         for (int i = 0; i < size; i++)
         {
-            content.push_back(move(this->d_queue.front()));
-            this->d_queue.pop_front();
+            content.push_back(move(this->vector_.front()));
+            this->vector_.pop_back();
         }
         return content;
     }
@@ -64,7 +64,8 @@ public:
     int size()
     {
         std::unique_lock<std::mutex> lock(this->d_mutex);
-        return this->d_queue.size();
+        int size = this->vector_.size();
+        return size;
     }
 };
 

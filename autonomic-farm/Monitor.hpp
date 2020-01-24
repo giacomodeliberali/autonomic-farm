@@ -54,15 +54,26 @@ public:
         auto elapsed = now - window_start;
         float elapsed_milliseconds = (long int)chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000.0;
 
-        if (elapsed_milliseconds >= 250)
+        if (elapsed_milliseconds >= 0.5)
         {
             float actual_throughput;
-            auto time =  chrono::duration_cast<chrono::milliseconds>(now - monitor_start).count();
+            auto time = chrono::duration_cast<chrono::milliseconds>(now - monitor_start).count();
             actual_throughput = task_collected / elapsed_milliseconds;
             last_throughput = actual_throughput;
             printf("%.2lld,%.2f,%d\n", time, actual_throughput, pool_->get_actual_workers_number());
             task_collected = 0;
             window_start = chrono::high_resolution_clock::now();
+
+            if (actual_throughput < expected_throughput - 0.5)
+            {
+                // add workers
+                pool_->add_worker();
+            }
+            else if (actual_throughput > expected_throughput + 0.5)
+            {
+                // freeze workers
+                pool_->remove_worker();
+            }
         }
     }
 };

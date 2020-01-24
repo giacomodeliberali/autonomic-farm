@@ -20,7 +20,7 @@ auto activewait = [](int *x) -> int * {
 
 vector<int *> *getInputVector()
 {
-    int chunk = 10000;
+    int chunk = 100;
     vector<int *> *vec = new vector<int *>();
 
     for (int i = 0; i < chunk; i++)
@@ -60,4 +60,10 @@ int main(int argc, char *argv[])
     auto results = master
                        ->run()
                        ->get_results();
+
+    long long sum = 0;
+    for (auto r : *results)
+        sum += *r;
+    
+    cout << "Sum: " << sum << endl;
 }

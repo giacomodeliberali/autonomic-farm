@@ -1,4 +1,5 @@
 *.out
 *.dSYM
-ssh.sh
-rsync.sh
+*.sh
+*.csv
+.ipynb_checkpoints/

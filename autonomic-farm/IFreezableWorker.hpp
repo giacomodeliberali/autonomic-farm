@@ -20,7 +20,6 @@ protected:
     virtual void run() = 0;
 
 public:
-
     // Spawn a new thread with this worker code
     void start()
     {
