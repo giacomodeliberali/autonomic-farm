@@ -2,46 +2,62 @@
 #include "WorkerPool.hpp"
 #include "DefaultEmitter.hpp"
 using namespace std;
-using namespace chrono;
 
 //FIXME: refactor
 auto activewait = [](int *x) -> int * {
-    auto start = high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     while (true)
     {
-        auto elapsed = high_resolution_clock::now() - start;
-        long long ns = duration_cast<nanoseconds>(elapsed).count();
-        if (ns >= *x * 1000)
+        auto elapsed = std::chrono::high_resolution_clock::now() - start;
+        long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+        if (microseconds >= *x * 1000)
             break;
     }
-
     return x;
 };
 
 vector<int *> *getInputVector()
 {
-    const int SECTION_SIZE = 10000;
+    int chunk = 10000;
     vector<int *> *vec = new vector<int *>();
 
-    cout << "Array: " << SECTION_SIZE << endl;
-    for (int i = 1; i <= SECTION_SIZE; i++)
-        vec->push_back(new int(i));
+    for (int i = 0; i < chunk; i++)
+    {
+        vec->push_back(new int(4));
+    }
+
+    for (int i = 0; i < chunk; i++)
+    {
+        vec->push_back(new int(1));
+    }
+
+    for (int i = 0; i < chunk; i++)
+    {
+        vec->push_back(new int(8));
+    }
 
     return vec;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+    if (argc < 2)
+    {
+        cout << "Usage is: [nw] [throughput] " << endl;
+        return 0;
+    }
 
-    int nw = 8;
+    int nw = atoi(argv[1]);
+    //float throughput = atof(argv[2]);
+
     cout << "[main.cpp] Initial nw =  " << nw << endl;
 
     auto start = chrono::high_resolution_clock::now();
 
     auto emitter = new DefaultEmitter<int>(getInputVector());
     auto master = new MasterWorker<int, int>(emitter, nw, activewait);
-    master->start();
-    master->join();
+    /*     master->start();
+    master->join(); */
     auto elapsed = chrono::high_resolution_clock::now() - start;
     long long milliseconds = chrono::duration_cast<chrono::milliseconds>(elapsed).count();
 

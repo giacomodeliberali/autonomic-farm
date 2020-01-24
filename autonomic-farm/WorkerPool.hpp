@@ -36,9 +36,6 @@ private:
     // The master worker that own this pool
     MasterWorker<TIN, TOUT> *master_;
 
-    // The mutex used to ensure the collect is called thread-safe
-    mutex collect_mutex;
-
     // The mutex used to lock the pool until all threads have joined
     mutex join_all_mutex;
 
@@ -74,11 +71,7 @@ public:
         pool_queue_.push(worker);
         if (result != (TOUT *)END_OF_STREAM)
         {
-            {
-                // ensure the collect is called in a thread-safe fashon
-                unique_lock<mutex> lock(this->collect_mutex);
-                master_->collect(result);
-            }
+            master_->collect(result);
         }
 
         pool_queue_.notify();

@@ -1,2 +1,4 @@
 *.out
 *.dSYM
+ssh.sh
+rsync.sh
