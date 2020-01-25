@@ -44,18 +44,18 @@ vector<int *> *getInputVector()
 int main(int argc, char *argv[])
 {
 
-    if (argc < 2)
+    if (argc < 3)
     {
         cout << "Usage is: [nw] [throughput] " << endl;
         return 0;
     }
 
     int nw = atoi(argv[1]);
-    //float throughput = atof(argv[2]);
+    float expected_throughput = atof(argv[2]);
 
     auto input_vec = getInputVector();
     auto emitter = new DefaultEmitter<int>(input_vec);
-    auto master = new MasterWorker<int, int>(emitter, nw, activewait);
+    auto master = new MasterWorker<int, int>(emitter, nw, activewait, expected_throughput);
 
     // Timer t("Farm");
     auto results = master

@@ -33,10 +33,10 @@ private:
     }
 
 public:
-    MasterWorker(IEmitter<TIN> *emitter, int nw, function<TOUT *(TIN *)> func) : emitter_(emitter)
+    MasterWorker(IEmitter<TIN> *emitter, int nw, function<TOUT *(TIN *)> func, float expected_throughput) : emitter_(emitter)
     {
         pool_ = new WorkerPool(this, nw, func);
-        monitor_ = new Monitor(pool_);
+        monitor_ = new Monitor(pool_, expected_throughput);
         collector_ = new Collector<TOUT>();
         this->stick();
     }

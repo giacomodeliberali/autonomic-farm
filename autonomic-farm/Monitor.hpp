@@ -17,7 +17,7 @@ private:
     WorkerPool<TIN, TOUT> *pool_;
 
     // The expected number of task per millisecond
-    float expected_throughput;
+    float expected_throughput_;
 
     // The last calculated throughput
     float last_throughput;
@@ -31,9 +31,9 @@ private:
     chrono::high_resolution_clock::time_point monitor_start;
 
 public:
-    Monitor(WorkerPool<TIN, TOUT> *pool) : pool_(pool)
+    Monitor(WorkerPool<TIN, TOUT> *pool, float expected_throughput) : pool_(pool), expected_throughput_(expected_throughput)
     {
-        expected_throughput = 1;
+        expected_throughput_ = 1;
     }
 
     void init()
@@ -65,12 +65,12 @@ public:
             task_collected = 0;
             window_start = chrono::high_resolution_clock::now();
 
-            if (actual_throughput < expected_throughput - 0.5)
+            if (actual_throughput < expected_throughput_ - 0.5)
             {
                 // add workers
                 pool_->notify_command(Flags::ADD_WORKER);
             }
-            else if (actual_throughput > expected_throughput + 0.5)
+            else if (actual_throughput > expected_throughput_ + 0.5)
             {
                 // freeze workers
                 pool_->notify_command(Flags::REMOVE_WORKER);
