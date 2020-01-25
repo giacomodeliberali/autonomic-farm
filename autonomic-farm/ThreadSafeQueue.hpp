@@ -13,58 +13,64 @@ template <typename T>
 class ThreadSafeQueue
 {
 private:
-    mutex d_mutex;
-    condition_variable d_condition;
-    vector<T> vector_;
+    mutex mutex_;
+    condition_variable not_empty_condition_;
+    deque<T> queue_;
 
 public:
     ThreadSafeQueue() {}
 
     void push(T const &value)
     {
-        std::unique_lock<std::mutex> lock(this->d_mutex);
-        vector_.push_back(value);
+        std::unique_lock<std::mutex> lock(this->mutex_);
+        this->queue_.push_front(value);
     }
 
     // Notify that the size of the queue has changed
     void notify()
     {
-        this->d_condition.notify_one();
+        this->not_empty_condition_.notify_one();
     }
 
     T pop()
     {
-        std::unique_lock<std::mutex> lock(this->d_mutex);
-        this->d_condition.wait(lock, [=] { return !this->vector_.empty(); });
-        T rc(std::move(this->vector_.back()));
-        this->vector_.pop_back();
-        return rc;
+        std::unique_lock<std::mutex> lock(this->mutex_);
+        this->not_empty_condition_.wait(lock, [=] { return !this->queue_.empty(); });
+
+        auto value = this->queue_.back();
+        this->queue_.pop_back();
+
+        return value;
     }
 
     bool is_empty()
     {
-        std::unique_lock<std::mutex> lock(this->d_mutex);
-        return (vector_.empty());
+        std::unique_lock<std::mutex> lock(this->mutex_);
+        return this->queue_.empty();
     }
 
     vector<T> pop_all()
     {
-        unique_lock<mutex> lock(this->d_mutex);
-        vector<T> content;
-        this->d_condition.wait(lock, [=] { return !this->vector_.empty(); });
-        int size = vector_.size();
+        unique_lock<mutex> lock(this->mutex_);
+
+        vector<T> vec_to_return;
+
+        this->not_empty_condition_.wait(lock, [=] { return !this->queue_.empty(); });
+
+        int size = this->queue_.size();
         for (int i = 0; i < size; i++)
         {
-            content.push_back(move(this->vector_.front()));
-            this->vector_.pop_back();
+            auto value = this->queue_.front();
+            this->queue_.pop_front();
+            vec_to_return.push_back(value);
         }
-        return content;
+        return vec_to_return;
     }
 
     int size()
     {
-        std::unique_lock<std::mutex> lock(this->d_mutex);
-        int size = this->vector_.size();
+        std::unique_lock<std::mutex> lock(this->mutex_);
+        int size = this->queue_.size();
         return size;
     }
 };

@@ -4,6 +4,7 @@
 #include "IFreezableWorker.hpp"
 #include "DefaultWorker.hpp"
 #include "WorkerPool.hpp"
+#include "Flags.hpp"
 #include <iostream>
 
 using namespace std;
@@ -54,7 +55,7 @@ public:
         auto elapsed = now - window_start;
         float elapsed_milliseconds = (long int)chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000.0;
 
-        if (elapsed_milliseconds >= 0.5)
+        if (elapsed_milliseconds >= 250)
         {
             float actual_throughput;
             auto time = chrono::duration_cast<chrono::milliseconds>(now - monitor_start).count();
@@ -67,12 +68,12 @@ public:
             if (actual_throughput < expected_throughput - 0.5)
             {
                 // add workers
-                pool_->add_worker();
+                pool_->notify_command(Flags::ADD_WORKER);
             }
             else if (actual_throughput > expected_throughput + 0.5)
             {
                 // freeze workers
-                pool_->remove_worker();
+                pool_->notify_command(Flags::REMOVE_WORKER);
             }
         }
     }

@@ -62,7 +62,7 @@ public:
         }
 
         auto joined_workers = pool_->join_all();
-        cout << "[Master] joined all (" << joined_workers << ")" << endl;
+        // cout << "[Master] joined all (" << joined_workers << ")" << endl;
 
         return this;
     };

@@ -20,7 +20,7 @@ auto activewait = [](int *x) -> int * {
 
 vector<int *> *getInputVector()
 {
-    int chunk = 100;
+    int chunk = 10000;
     vector<int *> *vec = new vector<int *>();
 
     for (int i = 0; i < chunk; i++)
@@ -53,17 +53,12 @@ int main(int argc, char *argv[])
     int nw = atoi(argv[1]);
     //float throughput = atof(argv[2]);
 
-    auto emitter = new DefaultEmitter<int>(getInputVector());
+    auto input_vec = getInputVector();
+    auto emitter = new DefaultEmitter<int>(input_vec);
     auto master = new MasterWorker<int, int>(emitter, nw, activewait);
 
     // Timer t("Farm");
     auto results = master
                        ->run()
                        ->get_results();
-
-    long long sum = 0;
-    for (auto r : *results)
-        sum += *r;
-    
-    cout << "Sum: " << sum << endl;
 }
