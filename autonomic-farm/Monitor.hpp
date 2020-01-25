@@ -5,6 +5,9 @@
 #include "DefaultWorker.hpp"
 #include "WorkerPool.hpp"
 #include "Flags.hpp"
+#include "Constants.hpp"
+#include "IStrategy.hpp"
+#include "DefaultStrategy.hpp"
 #include <iostream>
 
 using namespace std;
@@ -16,65 +19,54 @@ private:
     // The pool to monitor
     WorkerPool<TIN, TOUT> *pool_;
 
-    // The expected number of task per millisecond
-    float expected_throughput_;
-
-    // The last calculated throughput
-    float last_throughput;
-
     int task_collected = 0;
+    int total_collected_task = 0;
+
+    IStrategy *strategy;
 
     // The mutex used to ensure the collect is called thread-safe
     mutex notify_mutex;
 
-    chrono::high_resolution_clock::time_point window_start;
     chrono::high_resolution_clock::time_point monitor_start;
 
 public:
-    Monitor(WorkerPool<TIN, TOUT> *pool, float expected_throughput) : pool_(pool), expected_throughput_(expected_throughput)
+    Monitor(WorkerPool<TIN, TOUT> *pool, float expected_throughput) : pool_(pool)
     {
-        expected_throughput_ = 1;
+        strategy = new DefaultStrategy(expected_throughput);
     }
 
     void init()
     {
         monitor_start = chrono::high_resolution_clock::now();
-        window_start = monitor_start;
         cout << "time,throughput,nw" << endl;
     }
 
     // Called every time a task has been collected
     void notify()
     {
-        {
+        
             unique_lock<mutex> lock(this->notify_mutex);
             task_collected++;
-        }
+            total_collected_task++;
+        
 
         auto now = chrono::high_resolution_clock::now();
-        auto elapsed = now - window_start;
-        float elapsed_milliseconds = (long int)chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000.0;
+        auto elapsed = now - monitor_start;
+        float elapsed_milliseconds = (long int)chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
 
-        if (elapsed_milliseconds >= 250)
+        if (elapsed_milliseconds >= Constants::MONITOR_NOTIFICATION_INTERVAL)
         {
             float actual_throughput;
             auto time = chrono::duration_cast<chrono::milliseconds>(now - monitor_start).count();
             actual_throughput = task_collected / elapsed_milliseconds;
-            last_throughput = actual_throughput;
-            printf("%.2lld,%.2f,%d\n", time, actual_throughput, pool_->get_actual_workers_number());
+            printf("%d,%.2f,%d\n", total_collected_task, actual_throughput, pool_->get_actual_workers_number());
             task_collected = 0;
-            window_start = chrono::high_resolution_clock::now();
+            monitor_start = chrono::high_resolution_clock::now();
 
-            if (actual_throughput < expected_throughput_ - 0.5)
-            {
-                // add workers
-                pool_->notify_command(Flags::ADD_WORKER);
-            }
-            else if (actual_throughput > expected_throughput_ + 0.5)
-            {
-                // freeze workers
-                pool_->notify_command(Flags::REMOVE_WORKER);
-            }
+            auto cmd = strategy->get(actual_throughput);
+
+            if(cmd == Flags::ADD_WORKER || Flags::REMOVE_WORKER)
+                pool_->notify_command(cmd);
         }
     }
 };

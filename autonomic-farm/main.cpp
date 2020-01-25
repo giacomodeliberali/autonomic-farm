@@ -11,8 +11,8 @@ auto activewait = [](int *x) -> int * {
     while (true)
     {
         auto elapsed = std::chrono::high_resolution_clock::now() - start;
-        long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-        if (microseconds >= *x * 1000)
+        long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+        if (ms >= *x)
             break;
     }
     return x;
@@ -61,4 +61,7 @@ int main(int argc, char *argv[])
     auto results = master
                        ->run()
                        ->get_results();
+
+
+    // cout << "Count: " << results->size() << endl;
 }
