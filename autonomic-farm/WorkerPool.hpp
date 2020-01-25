@@ -155,14 +155,13 @@ public:
     }
 
     void rm(){
-        int pool_size = available_workers_pool_.size();
 
-        if (pool_size <= 1)
+
+        if(get_actual_workers_number() < 2)
             return;
 
         auto worker = available_workers_pool_.pop();
         waiting_workers_pool_.push(worker);
-
         waiting_workers_pool_.notify();
     }
 
