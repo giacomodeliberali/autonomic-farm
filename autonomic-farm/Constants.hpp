@@ -1,11 +1,11 @@
 #ifndef CONSTANTS_HPP
 #define CONSTANTS_HPP
 
-enum Constants {
-    // Number of milliseconds that elapses between the monitor notifies the strategy
-    MONITOR_NOTIFICATION_INTERVAL = 250,
-    STRATEGY_WINDOW_SIZE = 100
-};
+
+#define MONITOR_NOTIFICATION_INTERVAL 10
+#define STRATEGY_WINDOW_SIZE 2
+#define TREND_THRESHOLD  1/20
+#define AVERAGE_THRESHOLD 1/10
 
 
 #endif

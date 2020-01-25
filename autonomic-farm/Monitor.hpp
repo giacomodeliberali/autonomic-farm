@@ -54,7 +54,7 @@ public:
         auto elapsed = now - monitor_start;
         float elapsed_milliseconds = (long int)chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
 
-        if (elapsed_milliseconds >= Constants::MONITOR_NOTIFICATION_INTERVAL)
+        if (elapsed_milliseconds >= MONITOR_NOTIFICATION_INTERVAL)
         {
             float actual_throughput;
             auto time = chrono::duration_cast<chrono::milliseconds>(now - monitor_start).count();

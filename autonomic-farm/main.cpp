@@ -18,9 +18,9 @@ auto activewait = [](int *x) -> int * {
     return x;
 };
 
-vector<int *> *getInputVector()
+vector<int *> *get_default()
 {
-    int chunk = 10000;
+    int chunk = 5000;
     vector<int *> *vec = new vector<int *>();
 
     for (int i = 0; i < chunk; i++)
@@ -41,6 +41,20 @@ vector<int *> *getInputVector()
     return vec;
 }
 
+vector<int *> *get_constant()
+{
+    int chunk = 15000;
+    vector<int *> *vec = new vector<int *>();
+
+    for (int i = 0; i < chunk; i++)
+    {
+        vec->push_back(new int(4));
+    }
+
+    return vec;
+}
+
+
 int main(int argc, char *argv[])
 {
 
@@ -53,7 +67,7 @@ int main(int argc, char *argv[])
     int nw = atoi(argv[1]);
     float expected_throughput = atof(argv[2]);
 
-    auto input_vec = getInputVector();
+    auto input_vec = get_constant();
     auto emitter = new DefaultEmitter<int>(input_vec);
     auto master = new MasterWorker<int, int>(emitter, nw, activewait, expected_throughput);
 

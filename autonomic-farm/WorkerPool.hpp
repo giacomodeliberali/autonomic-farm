@@ -54,7 +54,6 @@ private:
 
     // The mutex used to lock the pool until all threads have joined
     mutex join_all_mutex;
-    
 
     // The condition variable used to wait until all threads have completed (also by EOS)
     condition_variable all_joined_condition;
@@ -70,7 +69,7 @@ public:
             worker->start();
             total_spawned_workers++;
         }
-        commands_thread = thread(&WorkerPool::manage_commands,this);   
+        commands_thread = thread(&WorkerPool::manage_commands, this);
     }
 
     // Assign a task to free worker or waits until one is available.
@@ -103,7 +102,7 @@ public:
 
         notify_command(Flags::END_OF_STREAM);
 
-        if(commands_thread.joinable())
+        if (commands_thread.joinable())
             commands_thread.join();
 
         int total_oes_sent = 0;
@@ -146,18 +145,16 @@ public:
         return total_spawned_workers - waiting_pool_size;
     }
 
-
-
     void notify_command(Flags cmd)
     {
         monitor_commands.push(cmd);
         monitor_commands.notify();
     }
 
-    void rm(){
+    void rm()
+    {
 
-
-        if(get_actual_workers_number() < 2)
+        if (get_actual_workers_number() < 2)
             return;
 
         auto worker = available_workers_pool_.pop();
@@ -165,7 +162,7 @@ public:
         waiting_workers_pool_.notify();
     }
 
-    void add() 
+    void add()
     {
         if (!waiting_workers_pool_.is_empty())
         {
@@ -195,7 +192,7 @@ public:
                 add();
             else if (cmd == Flags::REMOVE_WORKER)
                 rm();
-            else
+            else if (cmd == Flags::END_OF_STREAM)
                 eos = true;
         }
     }
