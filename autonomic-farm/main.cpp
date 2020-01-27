@@ -11,8 +11,8 @@ auto activewait = [](int *x) -> int * {
     while (true)
     {
         auto elapsed = std::chrono::high_resolution_clock::now() - start;
-        long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-        if (ms >= *x)
+        long long ms = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+        if (ms >= *x * 1000)
             break;
     }
     return x;
@@ -20,7 +20,7 @@ auto activewait = [](int *x) -> int * {
 
 vector<int *> *get_default()
 {
-    int chunk = 5000;
+    int chunk = 15000;
     vector<int *> *vec = new vector<int *>();
 
     for (int i = 0; i < chunk; i++)
@@ -43,7 +43,7 @@ vector<int *> *get_default()
 
 vector<int *> *get_constant()
 {
-    int chunk = 15000;
+    int chunk = 10000;
     vector<int *> *vec = new vector<int *>();
 
     for (int i = 0; i < chunk; i++)
@@ -53,7 +53,6 @@ vector<int *> *get_constant()
 
     return vec;
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -75,7 +74,6 @@ int main(int argc, char *argv[])
     auto results = master
                        ->run()
                        ->get_results();
-
 
     // cout << "Count: " << results->size() << endl;
 }

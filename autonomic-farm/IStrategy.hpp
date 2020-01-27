@@ -8,7 +8,7 @@ class IStrategy
 {
 public:
     
-    virtual Flags get(float actual_throughput) = 0;
+    virtual int get(float actual_throughput, int actual_workers_number) = 0;
 };
 
 #endif

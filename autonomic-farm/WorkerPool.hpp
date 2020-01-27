@@ -36,7 +36,7 @@ private:
 
     int max_concurrency;
 
-    ThreadSafeQueue<Flags> monitor_commands;
+    ThreadSafeQueue<int> monitor_commands;
 
     thread commands_thread;
 
@@ -86,7 +86,7 @@ public:
     // Collect the result from a worker and make it availabe again to receive another task.
     void collect(DefaultWorker<TIN, TOUT> *worker, TOUT *result)
     {
-        if (result != (TOUT *)Flags::END_OF_STREAM)
+        if (result != (TOUT *)END_OF_STREAM)
         {
             available_workers_pool_.push(worker);
             available_workers_pool_.notify();
@@ -100,7 +100,7 @@ public:
     {
         unique_lock<mutex> lock(this->join_all_mutex);
 
-        notify_command(Flags::END_OF_STREAM);
+        notify_command(END_OF_STREAM);
 
         if (commands_thread.joinable())
             commands_thread.join();
@@ -145,7 +145,7 @@ public:
         return total_spawned_workers - waiting_pool_size;
     }
 
-    void notify_command(Flags cmd)
+    void notify_command(int cmd)
     {
         monitor_commands.push(cmd);
         monitor_commands.notify();
@@ -188,12 +188,16 @@ public:
         while (!eos)
         {
             int cmd = monitor_commands.pop();
-            if (cmd == Flags::ADD_WORKER)
-                add();
-            else if (cmd == Flags::REMOVE_WORKER)
-                rm();
-            else if (cmd == Flags::END_OF_STREAM)
+            if (cmd == END_OF_STREAM)
+            {
                 eos = true;
+                continue;
+            }
+
+            if (FlagUtils::is(cmd, ADD_WORKER))
+                add();
+            else if (FlagUtils::is(cmd, REMOVE_WORKER))
+                rm();
         }
     }
 };

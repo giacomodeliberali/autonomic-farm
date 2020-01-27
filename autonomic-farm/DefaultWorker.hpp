@@ -46,12 +46,12 @@ protected:
         {
             wait_for_task();
 
-            if (task_ == (TIN *)Flags::END_OF_STREAM)
+            if (task_ == (TIN *)END_OF_STREAM)
             {
                 //cout << "\t\t[Worker] accept EOF " << endl;
                 eos = true;
                 //cout << "\t\t[Worker] received END_OF_STREAM. Terminating..." << endl;
-                pool_->collect(this, (TOUT *)Flags::END_OF_STREAM);
+                pool_->collect(this, (TOUT *)END_OF_STREAM);
                 continue;
             }
             //cout << "\t\t[Worker " << id_ << "] compute task " << *task_ << endl;

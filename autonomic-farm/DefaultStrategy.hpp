@@ -5,6 +5,7 @@
 #include "Constants.hpp"
 #include "Flags.hpp"
 #include <vector>
+#include <math.h>
 
 // The default strategy for the monitor
 class DefaultStrategy : public IStrategy
@@ -13,7 +14,10 @@ class DefaultStrategy : public IStrategy
 private:
     float expected_throughput_;
     vector<float> current_window_;
-    Flags last_command;
+    int window_number = 1;
+
+    float trend_threshold_;
+    float avg_threshold_;
 
     bool add_to_window(float actual_throughput)
     {
@@ -43,78 +47,76 @@ private:
 
     bool is_costant_average(float avg)
     {
-        return avg >= expected_throughput_ - AVERAGE_THRESHOLD &&
-               avg <= expected_throughput_ + AVERAGE_THRESHOLD;
+        return avg >= expected_throughput_ - avg_threshold_ &&
+               avg <= expected_throughput_ + avg_threshold_;
     }
 
     bool is_above_average(float avg)
     {
-        return avg > expected_throughput_ + AVERAGE_THRESHOLD;
+        return avg > expected_throughput_ + avg_threshold_;
     }
 
     bool is_under_average(float avg)
     {
-        return avg < expected_throughput_ - AVERAGE_THRESHOLD;
+        return avg < expected_throughput_ - avg_threshold_;
     }
 
     bool is_costant_trend(float trend)
     {
-        return trend >= -TREND_THRESHOLD && trend <= TREND_THRESHOLD;
+        return trend >= -trend_threshold_ && trend <= trend_threshold_;
     }
 
     bool is_positive_trend(float trend)
     {
-        return trend > TREND_THRESHOLD;
+        return trend > trend_threshold_;
     }
 
     bool is_negative_trend(float trend)
     {
-        return trend < TREND_THRESHOLD;
+        return trend < trend_threshold_;
     }
 
 public:
     DefaultStrategy(float expected_throughput) : expected_throughput_(expected_throughput)
     {
+        this->trend_threshold_ = 0.1 * expected_throughput_;
+        this->avg_threshold_ = 0.1 * expected_throughput_;
     }
 
-    Flags get(float actual_throughput) override
+    int get(float actual_throughput, int actual_workers_number) override
     {
-        auto cmd = Flags::NONE;
+        auto cmd = NONE;
         if (add_to_window(actual_throughput))
         {
             auto trend = get_trend();
             auto average = get_average();
 
-            if (is_costant_trend(trend))
+            if (!is_costant_average(average))
             {
-                if (is_under_average(average))
-                    cmd = Flags::ADD_WORKER;
-                else if (is_above_average(average))
-                    cmd = Flags::REMOVE_WORKER;
+                if (is_costant_trend(trend))
+                {
+                    if (is_under_average(average))
+                        cmd = ADD_WORKER;
+                    else if (is_above_average(average))
+                        cmd = REMOVE_WORKER;
+                }
+                else if (is_negative_trend(trend))
+                {
+                    if (is_under_average(average))
+                        cmd = ADD_WORKER;
+                }
+                else if (is_positive_trend(trend))
+                {
+                    if (is_above_average(average))
+                        cmd = REMOVE_WORKER;
+                }
             }
-            else if (is_negative_trend(trend))
-            {
-                if (is_under_average(average))
-                    cmd = Flags::ADD_WORKER;
-            }
-            else if (is_positive_trend(trend))
-            {
-                if (is_above_average(average))
-                    cmd = Flags::REMOVE_WORKER;
-            }
+
+            cmd = FlagUtils::combine(cmd, WINDOW_FULL);
 
             current_window_.clear();
         }
-
-        // avoid consecutive opposite commands
-        if(last_command == Flags::ADD_WORKER && cmd == Flags::REMOVE_WORKER)
-            cmd = Flags::NONE;
-
-        if(last_command == Flags::REMOVE_WORKER && cmd == Flags::ADD_WORKER)
-            cmd = Flags::NONE;
-
-        last_command = cmd;
-
+        
         return cmd;
     };
 };
