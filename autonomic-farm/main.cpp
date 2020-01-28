@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     int nw = atoi(argv[1]);
     float expected_throughput = atof(argv[2]);
 
-    auto input_vec = get_constant();
+    auto input_vec = get_default();
     auto emitter = new DefaultEmitter<int>(input_vec);
     auto master = new MasterWorker<int, int>(emitter, nw, activewait, expected_throughput);
 

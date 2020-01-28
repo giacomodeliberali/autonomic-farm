@@ -41,26 +41,28 @@ public:
     {
         monitor_start = chrono::high_resolution_clock::now();
         // window, expected_t, actural_t, workers_n, avg, avg_t, trend, trend_t
+        // printf("%d,%.2f,%.2f,%d,%.2f,%d\n", total_collected_task, expected_throughput_, actual_throughput, actual_workers_number, elapsed, task_collected);
         cout << "tasks,expected_throughput,actual_throughput,nw" << endl;
     }
 
     // Called every time a task has been collected
     void notify()
     {
-
         unique_lock<mutex> lock(this->notify_mutex);
         task_collected++;
         total_collected_task++;
 
         auto now = chrono::high_resolution_clock::now();
-        auto elapsed = chrono::duration_cast<std::chrono::microseconds>(now - monitor_start).count();
+        auto elapsed = chrono::duration_cast<std::chrono::microseconds>(now - monitor_start).count() / 1000.0;
         float actual_throughput;
+        int old_task = task_collected;
 
-        if (elapsed >= MONITOR_NOTIFICATION_INTERVAL) // every millisecond compute throughput
+        if (elapsed >= MONITOR_NOTIFICATION_INTERVAL) // compute throughput
         {
-            actual_throughput = (task_collected / (elapsed / 1000.0));
+            actual_throughput = task_collected / elapsed;
             prev_throughput_ = actual_throughput;
             task_collected = 0;
+            monitor_start = chrono::high_resolution_clock::now();
         }
         else
         {
@@ -71,13 +73,14 @@ public:
         auto cmd = strategy->get(actual_throughput, actual_workers_number);
 
         printf("%d,%.2f,%.2f,%d\n", total_collected_task, expected_throughput_, actual_throughput, actual_workers_number);
+        // printf("%d,%.2f,%.2f,%d\n", total_collected_task, expected_throughput_, actual_throughput, actual_workers_number);
 
         if (FlagUtils::is(cmd, ADD_WORKER) || FlagUtils::is(cmd, REMOVE_WORKER))
             pool_->notify_command(cmd);
 
         if (FlagUtils::is(cmd, WINDOW_FULL))
         {
-            monitor_start = chrono::high_resolution_clock::now();
+            //
         }
     }
 };

@@ -43,8 +43,8 @@ public:
 
     void collect(TOUT *result)
     {
-        collector_->collect(result);
         monitor_->notify();
+        collector_->collect(result);
     }
 
     // The code to be executed from the master worker
