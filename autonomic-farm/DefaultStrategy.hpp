@@ -5,7 +5,6 @@
 #include "Constants.hpp"
 #include "Flags.hpp"
 #include <vector>
-#include <math.h>
 
 // The default strategy for the monitor
 class DefaultStrategy : public IStrategy
@@ -13,11 +12,9 @@ class DefaultStrategy : public IStrategy
 
 private:
     float expected_throughput_;
-    vector<float> current_window_;
-    int window_number = 1;
-
-    float trend_threshold_;
+    float slope_threshold_;
     float avg_threshold_;
+    vector<float> current_window_;
 
     bool add_to_window(float actual_throughput)
     {
@@ -27,13 +24,13 @@ private:
         return current_window_.size() >= STRATEGY_WINDOW_SIZE;
     }
 
-    float get_trend()
+    float get_slope()
     {
-        float trend = 0;
+        float slope = 0;
         for (int i = 1; i < current_window_.size(); i++)
-            trend += current_window_[i] - current_window_[i - 1];
+            slope += current_window_[i] - current_window_[i - 1];
 
-        return trend;
+        return slope;
     }
 
     float get_average()
@@ -45,7 +42,7 @@ private:
         return sum / current_window_.size();
     }
 
-    bool is_costant_average(float avg)
+    bool is_in_average(float avg)
     {
         return avg >= expected_throughput_ - avg_threshold_ &&
                avg <= expected_throughput_ + avg_threshold_;
@@ -61,26 +58,26 @@ private:
         return avg < expected_throughput_ - avg_threshold_;
     }
 
-    bool is_costant_trend(float trend)
+    bool is_costant_slope(float slope)
     {
-        return trend >= -trend_threshold_ && trend <= trend_threshold_;
+        return slope >= -slope_threshold_ && slope <= slope_threshold_;
     }
 
-    bool is_positive_trend(float trend)
+    bool is_positive_slope(float slope)
     {
-        return trend > trend_threshold_;
+        return slope > slope_threshold_;
     }
 
-    bool is_negative_trend(float trend)
+    bool is_negative_slope(float slope)
     {
-        return trend < trend_threshold_;
+        return slope < slope_threshold_;
     }
 
 public:
     DefaultStrategy(float expected_throughput) : expected_throughput_(expected_throughput)
     {
-        this->trend_threshold_ = 0.1 * expected_throughput_;
-        this->avg_threshold_ = 0.1 * expected_throughput_;
+        this->slope_threshold_ = SLOPE_THRESHOLD;
+        this->avg_threshold_ = AVERAGE_THROUGHPUT_THRESHOLD * expected_throughput_;
     }
 
     int get(float actual_throughput, int actual_workers_number) override
@@ -88,24 +85,24 @@ public:
         auto cmd = NONE;
         if (add_to_window(actual_throughput))
         {
-            auto trend = get_trend();
+            auto slope = get_slope();
             auto average = get_average();
 
-            if (!is_costant_average(average))
+            if (!is_in_average(average))
             {
-                if (is_costant_trend(trend))
+                if (is_costant_slope(slope))
                 {
                     if (is_under_average(average))
                         cmd = ADD_WORKER;
                     else if (is_above_average(average))
                         cmd = REMOVE_WORKER;
                 }
-                else if (is_negative_trend(trend))
+                else if (is_negative_slope(slope))
                 {
                     if (is_under_average(average))
                         cmd = ADD_WORKER;
                 }
-                else if (is_positive_trend(trend))
+                else if (is_positive_slope(slope))
                 {
                     if (is_above_average(average))
                         cmd = REMOVE_WORKER;
@@ -116,7 +113,7 @@ public:
 
             current_window_.clear();
         }
-        
+
         return cmd;
     };
 };

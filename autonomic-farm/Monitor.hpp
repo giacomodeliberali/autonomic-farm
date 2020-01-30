@@ -10,6 +10,8 @@
 #include "DefaultStrategy.hpp"
 #include <iostream>
 
+#define MONITOR_THROUGHPUT_WINDOW 10.0
+
 using namespace std;
 
 template <typename TIN, typename TOUT>
@@ -57,8 +59,9 @@ public:
         float actual_throughput;
         int old_task = task_collected;
 
-        if (elapsed >= MONITOR_NOTIFICATION_INTERVAL) // compute throughput
+        if (elapsed >= MONITOR_THROUGHPUT_WINDOW) 
         {
+            // compute throughput
             actual_throughput = task_collected / elapsed;
             prev_throughput_ = actual_throughput;
             task_collected = 0;

@@ -151,7 +151,7 @@ public:
         monitor_commands.notify();
     }
 
-    void rm()
+    void remove_worker()
     {
 
         if (get_actual_workers_number() < 2)
@@ -162,7 +162,7 @@ public:
         waiting_workers_pool_.notify();
     }
 
-    void add()
+    void add_worker()
     {
         if (!waiting_workers_pool_.is_empty())
         {
@@ -195,9 +195,13 @@ public:
             }
 
             if (FlagUtils::is(cmd, ADD_WORKER))
-                add();
+            {
+                add_worker();
+            }
             else if (FlagUtils::is(cmd, REMOVE_WORKER))
-                rm();
+            {
+                remove_worker();
+            }
         }
     }
 };

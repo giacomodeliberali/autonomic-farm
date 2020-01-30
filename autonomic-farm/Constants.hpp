@@ -1,7 +1,13 @@
 #ifndef CONSTANTS_HPP
 #define CONSTANTS_HPP
 
-#define MONITOR_NOTIFICATION_INTERVAL 50.0
-#define STRATEGY_WINDOW_SIZE 150
+// The strategy window size
+#define STRATEGY_WINDOW_SIZE 50
+
+// The slope threshold
+#define SLOPE_THRESHOLD 0.02
+
+// The average throughput treshold wrt to the given throughput (10% of given throughput)
+#define AVERAGE_THROUGHPUT_THRESHOLD 0.1
 
 #endif
