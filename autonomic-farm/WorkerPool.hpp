@@ -24,7 +24,7 @@ class DefaultWorker;
 #pragma endregion Template declarations
 
 template <typename TIN, typename TOUT>
-class WorkerPool
+class WorkerPool : public IFreezableWorker
 {
 
 private:
@@ -37,8 +37,6 @@ private:
     int max_concurrency;
 
     ThreadSafeQueue<int> monitor_commands;
-
-    thread commands_thread;
 
     // The function this pool workers have to compute
     function<TOUT *(TIN *)> func_;
@@ -69,7 +67,7 @@ public:
             worker->start();
             total_spawned_workers++;
         }
-        commands_thread = thread(&WorkerPool::manage_commands, this);
+        this->start();
     }
 
     // Assign a task to free worker or waits until one is available.
@@ -102,8 +100,8 @@ public:
 
         notify_command(END_OF_STREAM);
 
-        if (commands_thread.joinable())
-            commands_thread.join();
+        // join the command thread
+        this->join();
 
         int total_oes_sent = 0;
 
@@ -182,7 +180,7 @@ public:
         available_workers_pool_.notify();
     }
 
-    void manage_commands()
+    void run() override
     {
         bool eos = false;
         while (!eos)

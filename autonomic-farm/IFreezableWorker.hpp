@@ -2,21 +2,17 @@
 #define I_FREEZABLE_WORKER_HPP
 
 #include <thread>
-#include <mutex>
-#include <condition_variable>
-#include <functional>
-#include <iostream>
 
 using namespace std;
 
-// A worker that run on its own thread that can be freezed until a condition is met
+// A worker that run on its own thread
 class IFreezableWorker
 {
 
 protected:
     // The thread where this worker runs on
     thread thread_;
-    // The code to be executed when not in freeze state
+    // The code to be executed in the thread
     virtual void run() = 0;
 
 public:

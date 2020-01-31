@@ -1,3 +1,4 @@
+#include <iostream>
 #include "MasterWorker.hpp"
 #include "WorkerPool.hpp"
 #include "DefaultEmitter.hpp"
@@ -14,7 +15,7 @@ int *func(int *x)
     {
         auto elapsed = chrono::high_resolution_clock::now() - start;
         long long ms = chrono::duration_cast<chrono::microseconds>(elapsed).count();
-        if (ms >= *x * 1000)
+        if (ms >= *x * 1000) // x milliseconds
             break;
     }
     return x;
@@ -22,7 +23,6 @@ int *func(int *x)
 
 int main(int argc, char *argv[])
 {
-
     if (argc < 3)
     {
         cout << "Usage is: [nw] [throughput] " << endl;

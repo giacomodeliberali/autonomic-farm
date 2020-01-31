@@ -21,24 +21,12 @@ private:
     Collector<TOUT> *collector_;
     Monitor<TIN, TOUT> *monitor_;
 
-    // Stick current thread on a core
-    void stick()
-    {
-        /*         cpu_set_t cpuset;
-        CPU_ZERO(&cpuset);
-        CPU_SET(sched_getcpu(), &cpuset);
-
-        pthread_t current_thread = pthread_self();
-        pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset); */
-    }
-
 public:
     MasterWorker(IEmitter<TIN> *emitter, int nw, function<TOUT *(TIN *)> func, float expected_throughput) : emitter_(emitter)
     {
         pool_ = new WorkerPool(this, nw, func);
         monitor_ = new Monitor(pool_, expected_throughput);
         collector_ = new Collector<TOUT>();
-        this->stick();
     }
 
     void collect(TOUT *result)

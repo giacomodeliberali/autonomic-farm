@@ -1,11 +1,12 @@
 #ifndef DEFAULT_WORKER_HPP
 #define DEFAULT_WORKER_HPP
 
+#include <functional>
+#include <vector>
+#include <iostream>
 #include "IFreezableWorker.hpp"
 #include "WorkerPool.hpp"
 #include "Flags.hpp"
-#include <vector>
-#include <iostream>
 
 using namespace std;
 
@@ -18,10 +19,7 @@ private:
     {
         unique_lock<mutex> lock(this->task_mutex);
         if (task_ == nullptr)
-        {
-            //cout << "\t\t[Worker " << id_ << "] waiting a task " << endl;
             this->task_condition.wait(lock, [&] { return this->task_ != nullptr; });
-        }
     }
 
 protected:
@@ -48,13 +46,10 @@ protected:
 
             if (task_ == (TIN *)END_OF_STREAM)
             {
-                //cout << "\t\t[Worker] accept EOF " << endl;
                 eos = true;
-                //cout << "\t\t[Worker] received END_OF_STREAM. Terminating..." << endl;
                 pool_->collect(this, (TOUT *)END_OF_STREAM);
                 continue;
             }
-            //cout << "\t\t[Worker " << id_ << "] compute task " << *task_ << endl;
 
             // Compute result
             auto result = func_(task_);
@@ -73,9 +68,7 @@ public:
     }
 
     void accept(TIN *task)
-    {
-        //if (task != (TIN *)END_OF_STREAM)
-        //cout << "\t\t[Worker " << id_ << "] accept task " << *task << endl;
+    {        
         unique_lock<mutex> lock(this->task_mutex);
         task_ = task;
         this->task_condition.notify_one();

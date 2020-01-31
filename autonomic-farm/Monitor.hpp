@@ -10,6 +10,7 @@
 #include "DefaultStrategy.hpp"
 #include <iostream>
 
+// Refresh the throughput every 10 milliseconds
 #define MONITOR_THROUGHPUT_WINDOW 10.0
 
 using namespace std;
@@ -42,8 +43,6 @@ public:
     void init()
     {
         monitor_start = chrono::high_resolution_clock::now();
-        // window, expected_t, actural_t, workers_n, avg, avg_t, trend, trend_t
-        // printf("%d,%.2f,%.2f,%d,%.2f,%d\n", total_collected_task, expected_throughput_, actual_throughput, actual_workers_number, elapsed, task_collected);
         cout << "tasks,expected_throughput,actual_throughput,nw" << endl;
     }
 
@@ -75,16 +74,12 @@ public:
         auto actual_workers_number = pool_->get_actual_workers_number();
         auto cmd = strategy->get(actual_throughput, actual_workers_number);
 
-        printf("%d,%.2f,%.2f,%d\n", total_collected_task, expected_throughput_, actual_throughput, actual_workers_number);
-        // printf("%d,%.2f,%.2f,%d\n", total_collected_task, expected_throughput_, actual_throughput, actual_workers_number);
+        cout.precision(2);
+        cout << std::fixed << total_collected_task << "," << expected_throughput_ << "," << actual_throughput << "," << actual_workers_number << "\n";
+    
 
         if (FlagUtils::is(cmd, ADD_WORKER) || FlagUtils::is(cmd, REMOVE_WORKER))
             pool_->notify_command(cmd);
-
-        if (FlagUtils::is(cmd, WINDOW_FULL))
-        {
-            //
-        }
     }
 };
 
