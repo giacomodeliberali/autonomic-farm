@@ -21,16 +21,25 @@ private:
     // The pool to monitor
     WorkerPool<TIN, TOUT> *pool_;
 
+    // The number of task collected in the current interval
     int task_collected = 0;
+
+    // The total number of task collected since the monitor has been started
     int total_collected_task = 0;
+
+    // The throughput in the previous window
     float prev_throughput_ = 0;
+
+    // The expected throughput from the user
     float expected_throughput_;
 
+    // The strategy that decides when to add or remove a worker
     IStrategy *strategy;
 
     // The mutex used to ensure the collect is called thread-safe
     mutex notify_mutex;
 
+    // The starting time of the current window
     chrono::high_resolution_clock::time_point monitor_start;
 
 public:
@@ -54,8 +63,8 @@ public:
 
         auto now = chrono::high_resolution_clock::now();
         auto elapsed = chrono::duration_cast<std::chrono::microseconds>(now - monitor_start).count() / 1000.0;
-        float actual_throughput;
-        int old_task = task_collected;
+        
+        float actual_throughput = prev_throughput_;
 
         if (elapsed >= MONITOR_THROUGHPUT_WINDOW) 
         {
@@ -65,10 +74,6 @@ public:
             task_collected = 0;
             monitor_start = chrono::high_resolution_clock::now();
         }
-        else
-        {
-            actual_throughput = prev_throughput_;
-        }
 
         auto actual_workers_number = pool_->get_actual_workers_number();
         auto cmd = strategy->get(actual_throughput, actual_workers_number);
@@ -76,7 +81,6 @@ public:
         cout.precision(2);
         cout << std::fixed << total_collected_task << "," << expected_throughput_ << "," << actual_throughput << "," << actual_workers_number << "\n";
     
-
         if (FlagUtils::is(cmd, ADD_WORKER) || FlagUtils::is(cmd, REMOVE_WORKER))
             pool_->notify_command(cmd);
     }

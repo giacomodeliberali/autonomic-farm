@@ -109,6 +109,7 @@ public:
                 }
             }
 
+            // use bitmask to notify more than one command
             cmd = FlagUtils::combine(cmd, WINDOW_FULL);
 
             current_window_.clear();

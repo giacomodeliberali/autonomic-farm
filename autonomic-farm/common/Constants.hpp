@@ -10,4 +10,7 @@
 // The average throughput treshold wrt to the given throughput (10% of given throughput)
 #define AVERAGE_THROUGHPUT_THRESHOLD 0.1
 
+// The size of the chunks of the input arrays
+#define CHUNK_SIZE 30000
+
 #endif

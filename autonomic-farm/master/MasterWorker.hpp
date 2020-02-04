@@ -29,6 +29,8 @@ public:
         collector_ = new Collector<TOUT>();
     }
 
+
+    // Called every time a task has been collected
     void collect(TOUT *result)
     {
         monitor_->notify();

@@ -34,8 +34,10 @@ private:
     // The total amount of spawned workers
     int total_spawned_workers = 0;
 
+    // The max number of threads this machine supports (max nw)
     int max_concurrency;
 
+    // The queue of commands received from the monitor of this pool
     ThreadSafeQueue<int> monitor_commands;
 
     // The function this pool workers have to compute
@@ -98,24 +100,27 @@ public:
     {
         unique_lock<mutex> lock(this->join_all_mutex);
 
-        notify_command(END_OF_STREAM);
-
+        // send the EOS to the command thread
+        this->notify_command(END_OF_STREAM);
         // join the command thread
         this->join();
-
-        int total_oes_sent = 0;
 
         int available_pool_size = available_workers_pool_.size();
         int waiting_pool_size = waiting_workers_pool_.size();
 
+        // wait until all workers that were computing
+        // gets collected and pushed again in the available_workers_pool_
         if (available_pool_size != (total_spawned_workers - waiting_pool_size))
             this->all_joined_condition.wait(lock, [&] {
                 available_pool_size = available_workers_pool_.size();
                 return available_pool_size == (total_spawned_workers - waiting_pool_size);
             });
 
+        int total_oes_sent = 0;
+
         if (waiting_pool_size > 0)
         {
+            // join all the waiting workers
             auto workers = waiting_workers_pool_.pop_all();
             for (auto worker : workers)
             {
@@ -128,10 +133,13 @@ public:
         auto workers = available_workers_pool_.pop_all();
         for (auto worker : workers)
         {
+            // join all available workers
             worker->accept((TIN *)END_OF_STREAM);
             worker->join();
             total_oes_sent++;
         }
+
+        assert(total_spawned_workers == total_oes_sent);
 
         return total_oes_sent;
     }
@@ -143,12 +151,14 @@ public:
         return total_spawned_workers - waiting_pool_size;
     }
 
+    // Notify a command for the commands thread
     void notify_command(int cmd)
     {
         monitor_commands.push(cmd);
         monitor_commands.notify();
     }
 
+    // Move a worker from the available_workers_pool_ to the waiting_workers_pool_
     void remove_worker()
     {
 
@@ -160,6 +170,8 @@ public:
         waiting_workers_pool_.notify();
     }
 
+    // Move a worker from the waiting_workers_pool_ to the available_workers_pool_
+    // if possible, otherwise spawns a new worker and pushes it to the available_workers_pool_
     void add_worker()
     {
         if (!waiting_workers_pool_.is_empty())
@@ -169,7 +181,7 @@ public:
         }
         else
         {
-            if (total_spawned_workers >= max_concurrency)
+            if (total_spawned_workers >= max_concurrency) // do not spawn more, uselss
                 return;
 
             auto worker = new DefaultWorker<TIN, TOUT>(this, func_);
@@ -180,6 +192,8 @@ public:
         available_workers_pool_.notify();
     }
 
+    // The commands thread, which listens for commands from the monitor
+    // and add/remove a workers to/from this pool
     void run() override
     {
         bool eos = false;
@@ -187,19 +201,11 @@ public:
         {
             int cmd = monitor_commands.pop();
             if (cmd == END_OF_STREAM)
-            {
                 eos = true;
-                continue;
-            }
-
-            if (FlagUtils::is(cmd, ADD_WORKER))
-            {
+            else if (FlagUtils::is(cmd, ADD_WORKER))
                 add_worker();
-            }
             else if (FlagUtils::is(cmd, REMOVE_WORKER))
-            {
                 remove_worker();
-            }
         }
     }
 };
