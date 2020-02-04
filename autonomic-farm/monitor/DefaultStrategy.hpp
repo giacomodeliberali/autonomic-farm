@@ -2,8 +2,8 @@
 #define DEFAULT_STRATEGY_HPP
 
 #include "IStrategy.hpp"
-#include "Constants.hpp"
-#include "Flags.hpp"
+#include "../common/Flags.hpp"
+#include "../common/Constants.hpp"
 #include <vector>
 
 // The default strategy for the monitor

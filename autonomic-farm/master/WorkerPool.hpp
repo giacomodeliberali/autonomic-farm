@@ -1,10 +1,10 @@
 #ifndef WORKER_queue_HPP
 #define WORKER_queue_HPP
 
-#include "DefaultWorker.hpp"
 #include "MasterWorker.hpp"
-#include "ThreadSafeQueue.hpp"
-#include "Flags.hpp"
+#include "../worker/DefaultWorker.hpp"
+#include "../common/ThreadSafeQueue.hpp"
+#include "../common/Flags.hpp"
 #include <vector>
 #include <iostream>
 #include <thread>
@@ -24,7 +24,7 @@ class DefaultWorker;
 #pragma endregion Template declarations
 
 template <typename TIN, typename TOUT>
-class WorkerPool : public IFreezableWorker
+class WorkerPool : public IWorker
 {
 
 private:

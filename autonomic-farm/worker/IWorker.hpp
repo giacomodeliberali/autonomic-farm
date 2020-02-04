@@ -1,12 +1,12 @@
-#ifndef I_FREEZABLE_WORKER_HPP
-#define I_FREEZABLE_WORKER_HPP
+#ifndef I_WORKER_HPP
+#define I_WORKER_HPP
 
 #include <thread>
 
 using namespace std;
 
 // A worker that run on its own thread
-class IFreezableWorker
+class IWorker
 {
 
 protected:
@@ -19,7 +19,7 @@ public:
     // Spawn a new thread with this worker code
     void start()
     {
-        thread_ = thread(&IFreezableWorker::run, this);
+        thread_ = thread(&IWorker::run, this);
     }
 
     // Join the worker's thread

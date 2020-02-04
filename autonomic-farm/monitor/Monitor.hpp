@@ -1,11 +1,10 @@
 #ifndef MONITOR_HPP
 #define MONITOR_HPP
 
-#include "IFreezableWorker.hpp"
-#include "DefaultWorker.hpp"
-#include "WorkerPool.hpp"
-#include "Flags.hpp"
-#include "Constants.hpp"
+#include "../worker/DefaultWorker.hpp"
+#include "../master/WorkerPool.hpp"
+#include "../common/Flags.hpp"
+#include "../common/Constants.hpp"
 #include "IStrategy.hpp"
 #include "DefaultStrategy.hpp"
 #include <iostream>

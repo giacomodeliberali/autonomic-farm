@@ -1,12 +1,12 @@
 #ifndef MASTER_WORKER_HPP
 #define MASTER_WORKER_HPP
 
-#include "IFreezableWorker.hpp"
-#include "DefaultWorker.hpp"
-#include "IEmitter.hpp"
-#include "WorkerPool.hpp"
-#include "Collector.hpp"
-#include "Monitor.hpp"
+#include "../worker/IWorker.hpp"
+#include "../worker/DefaultWorker.hpp"
+#include "../emitter/IEmitter.hpp"
+#include "../master/MasterWorker.hpp"
+#include "../collector/Collector.hpp"
+#include "../monitor/Monitor.hpp"
 #include <vector>
 #include <iostream>
 

@@ -1,22 +1,23 @@
 #include <iostream>
-#include "MasterWorker.hpp"
-#include "WorkerPool.hpp"
-#include "DefaultEmitter.hpp"
-#include "Timer.hpp"
-#include "inputs.hpp"
-#include "InputType.hpp"
+#include "master/MasterWorker.hpp"
+#include "master/WorkerPool.hpp"
+#include "emitter/DefaultEmitter.hpp"
+// #include "common/Timer.hpp"
+#include "common/inputs.hpp"
+#include "common/InputType.hpp"
 
 using namespace std;
 
 int *func(int *x)
 {
     auto start = chrono::high_resolution_clock::now();
-    while (true)
+    auto end = false;
+    while (!end)
     {
         auto elapsed = chrono::high_resolution_clock::now() - start;
-        long long ms = chrono::duration_cast<chrono::microseconds>(elapsed).count();
+        auto ms = chrono::duration_cast<chrono::microseconds>(elapsed).count();
         if (ms >= *x * 1000) // x milliseconds
-            break;
+            end = true;
     }
     return x;
 }
@@ -25,7 +26,13 @@ int main(int argc, char *argv[])
 {
     if (argc < 3)
     {
-        cout << "Usage is: [nw] [throughput] " << endl;
+        cout << "\nUsage is " << argv[0] << " nw throughput [inputType]\n\n";
+        cout << "Input type could be: " << endl;
+        cout << "\t- 1 = 4L 1L 8L \t(default)" << endl;
+        cout << "\t- 2 = 4L 4L 4L \t(constant)" << endl;
+        cout << "\t- 3 = 8L 1L 4L \t(reverse default)" << endl;
+        cout << "\t- 4 = 1L 8L \t(low high)" << endl;
+        cout << "\t- 5 = 8L 1L \t(high low)" << endl;
         return 0;
     }
 
@@ -51,9 +58,6 @@ int main(int argc, char *argv[])
             break;
         case InputType::HighLow:
             input_vec = get_highlow();
-            break;
-        default:
-            input_vec = get_default();
             break;
         }
     }

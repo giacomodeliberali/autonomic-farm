@@ -4,14 +4,14 @@
 #include <functional>
 #include <vector>
 #include <iostream>
-#include "IFreezableWorker.hpp"
-#include "WorkerPool.hpp"
-#include "Flags.hpp"
+#include "../worker/IWorker.hpp"
+#include "../master/WorkerPool.hpp"
+#include "../common/Flags.hpp"
 
 using namespace std;
 
 template <typename TIN, typename TOUT>
-class DefaultWorker : public IFreezableWorker
+class DefaultWorker : public IWorker
 {
 
 private:
