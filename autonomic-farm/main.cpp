@@ -1,10 +1,10 @@
 #include <iostream>
-#include "master/MasterWorker.hpp"
-#include "master/WorkerPool.hpp"
-#include "emitter/DefaultEmitter.hpp"
-// #include "common/Timer.hpp"
-#include "common/inputs.hpp"
-#include "common/InputType.hpp"
+#include "src/master/MasterWorker.hpp"
+#include "src/master/WorkerPool.hpp"
+#include "src/emitter/DefaultEmitter.hpp"
+// #include "src/common/Timer.hpp"
+#include "src/common/inputs.hpp"
+#include "src/common/InputType.hpp"
 
 using namespace std;
 
