@@ -5,3 +5,6 @@ prod:
 # With the debug flag 
 build:
 	g++ -g --debug -std=c++17 main.cpp -lpthread -o farm.out
+
+ff:
+	g++ -g --debug -I./fastflow -std=c++17 main-ff.cpp -lpthread -o farm-ff.out

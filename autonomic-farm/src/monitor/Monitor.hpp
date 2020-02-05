@@ -1,8 +1,7 @@
 #ifndef MONITOR_HPP
 #define MONITOR_HPP
 
-#include "../worker/DefaultWorker.hpp"
-#include "../master/WorkerPool.hpp"
+#include "../master/IPool.hpp"
 #include "../common/Flags.hpp"
 #include "../common/Constants.hpp"
 #include "IStrategy.hpp"
@@ -14,12 +13,11 @@
 
 using namespace std;
 
-template <typename TIN, typename TOUT>
 class Monitor
 {
 private:
     // The pool to monitor
-    WorkerPool<TIN, TOUT> *pool_;
+    IPool *pool_;
 
     // The number of task collected in the current interval
     int task_collected = 0;
@@ -43,7 +41,7 @@ private:
     chrono::high_resolution_clock::time_point monitor_start;
 
 public:
-    Monitor(WorkerPool<TIN, TOUT> *pool, float expected_throughput) : pool_(pool), expected_throughput_(expected_throughput)
+    Monitor(IPool *pool, float expected_throughput) : pool_(pool), expected_throughput_(expected_throughput)
     {
         strategy = new DefaultStrategy(expected_throughput);
     }
@@ -63,10 +61,10 @@ public:
 
         auto now = chrono::high_resolution_clock::now();
         auto elapsed = chrono::duration_cast<std::chrono::microseconds>(now - monitor_start).count() / 1000.0;
-        
+
         float actual_throughput = prev_throughput_;
 
-        if (elapsed >= MONITOR_THROUGHPUT_WINDOW) 
+        if (elapsed >= MONITOR_THROUGHPUT_WINDOW)
         {
             // compute throughput
             actual_throughput = task_collected / elapsed;
@@ -80,7 +78,7 @@ public:
 
         cout.precision(2);
         cout << std::fixed << total_collected_task << "," << expected_throughput_ << "," << actual_throughput << "," << actual_workers_number << "\n";
-    
+
         if (FlagUtils::is(cmd, ADD_WORKER) || FlagUtils::is(cmd, REMOVE_WORKER))
             pool_->notify_command(cmd);
     }

@@ -19,7 +19,7 @@ private:
     IEmitter<TIN> *emitter_;
     WorkerPool<TIN, TOUT> *pool_;
     Collector<TOUT> *collector_;
-    Monitor<TIN, TOUT> *monitor_;
+    Monitor *monitor_;
 
 public:
     MasterWorker(IEmitter<TIN> *emitter, int nw, function<TOUT *(TIN *)> func, float expected_throughput) : emitter_(emitter)

@@ -5,6 +5,7 @@
 #include "../worker/DefaultWorker.hpp"
 #include "../common/ThreadSafeQueue.hpp"
 #include "../common/Flags.hpp"
+#include "IPool.hpp"
 #include <vector>
 #include <iostream>
 #include <thread>
@@ -24,7 +25,7 @@ class DefaultWorker;
 #pragma endregion Template declarations
 
 template <typename TIN, typename TOUT>
-class WorkerPool : public IWorker
+class WorkerPool : public IWorker, public IPool
 {
 
 private:
@@ -144,7 +145,7 @@ public:
         return total_oes_sent;
     }
 
-    int get_actual_workers_number()
+    int get_actual_workers_number() override
     {
         int waiting_pool_size = waiting_workers_pool_.size();
 
@@ -152,7 +153,7 @@ public:
     }
 
     // Notify a command for the commands thread
-    void notify_command(int cmd)
+    void notify_command(int cmd) override
     {
         monitor_commands.push(cmd);
         monitor_commands.notify();
