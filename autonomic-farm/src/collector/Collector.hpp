@@ -2,6 +2,7 @@
 #define COLLECTOR_HPP
 
 #include <vector>
+#include <mutex>
 
 using namespace std;
 

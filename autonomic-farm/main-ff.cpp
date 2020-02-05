@@ -164,6 +164,7 @@ public:
 
     MasterFFWorker<TIN, TOUT> *run()
     {
+        // http://calvados.di.unipi.it/storage/tutorial/html/tutorial.html
         int run_result = farm_->run_then_freeze(); // run workers and once they are done, freeze them
         assert(run_result == 0);
         farm_->wait_freezing(); // wait all to freeze
@@ -194,6 +195,27 @@ int main(int argc, char *argv[])
     float expected_throughput = atof(argv[2]);
 
     auto input_vec = get_default();
+
+    if (argc == 4)
+    {
+        // input provided
+        int input_type = atoi(argv[3]);
+        switch (input_type)
+        {
+        case InputType::Constant:
+            input_vec = get_constant();
+            break;
+        case InputType::ReverseDefault:
+            input_vec = get_reverse_default();
+            break;
+        case InputType::LowHigh:
+            input_vec = get_lowhigh();
+            break;
+        case InputType::HighLow:
+            input_vec = get_highlow();
+            break;
+        }
+    }
 
     auto emitter = new DefaultEmitter<int>(input_vec);
     auto master = new MasterFFWorker<int, int>(emitter, nw, &func, expected_throughput);
