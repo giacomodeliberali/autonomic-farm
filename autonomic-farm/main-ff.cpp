@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 #include <ff/ff.hpp>
 #include <ff/farm.hpp>
 #include "src/emitter/DefaultEmitter.hpp"
