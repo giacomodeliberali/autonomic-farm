@@ -134,7 +134,7 @@ public:
 
         auto next = emitter_->get_next();
 
-        if (next != nullptr)
+        if (next)
         {
             task_diff_++;
             this->ff_send_out_to(next, worker_id);
