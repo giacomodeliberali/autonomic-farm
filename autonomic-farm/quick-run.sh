@@ -23,3 +23,22 @@ for (( i=1; i<=$runs_number; i++ ))
 		echo "srv-constant-$i-$initial_nw-$expected_troughput.csv..."
 		./farm.out $initial_nw $expected_troughput 2 > csv/srv-constant-$i-$initial_nw-$expected_troughput.csv
 	done
+
+
+for (( i=1; i<=$runs_number; i++ ))
+	do  
+		echo "srv-reverse-default-$i-$initial_nw-$expected_troughput.csv..."
+		./farm.out $initial_nw $expected_troughput 3 > csv/srv-reverse-default-$i-$initial_nw-$expected_troughput.csv
+	done
+
+for (( i=1; i<=$runs_number; i++ ))
+	do  
+		echo "srv-lowhigh-$i-$initial_nw-$expected_troughput.csv..."
+		./farm.out $initial_nw $expected_troughput 4 > csv/srv-lowhigh-$i-$initial_nw-$expected_troughput.csv
+	done
+
+for (( i=1; i<=$runs_number; i++ ))
+	do  
+		echo "srv-highlow-$i-$initial_nw-$expected_troughput.csv..."
+		./farm.out $initial_nw $expected_troughput 5 > csv/srv-highlow-$i-$initial_nw-$expected_troughput.csv
+	done
