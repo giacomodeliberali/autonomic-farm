@@ -13,4 +13,7 @@
 // The size of the chunks of the input arrays
 #define CHUNK_SIZE 30000
 
+#define DOUBLE_COMMAND_SLOPE_THRESHOLD 0.15
+#define QUAD_COMMAND_SLOPE_THRESHOLD 0.30
+
 #endif

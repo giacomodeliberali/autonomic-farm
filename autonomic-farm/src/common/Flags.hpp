@@ -7,11 +7,13 @@
 #define REMOVE_WORKER 2
 #define NONE 4
 #define WINDOW_FULL 8
+#define MULTIPLE_COMMANDS 16
+#define DOUBLE_COMMAND 32
+#define QUAD_COMMAND 64
 
 class FlagUtils
 {
-    public:
-
+public:
     static bool is(int value, int flag)
     {
         return (value & flag) == flag;
@@ -20,6 +22,11 @@ class FlagUtils
     static int combine(int value, int flag)
     {
         return (value | flag);
+    }
+
+    static int combine(int value, int flag, int flag1)
+    {
+        return (value | flag | flag1);
     }
 };
 

@@ -80,7 +80,18 @@ public:
         cout << std::fixed << total_collected_task << "," << expected_throughput_ << "," << actual_throughput << "," << actual_workers_number << "\n";
 
         if (FlagUtils::is(cmd, ADD_WORKER) || FlagUtils::is(cmd, REMOVE_WORKER))
-            pool_->notify_command(cmd);
+        {
+            if (FlagUtils::is(cmd, MULTIPLE_COMMANDS))
+            {
+                int cmd_number = FlagUtils::is(cmd, DOUBLE_COMMAND) ? 2 : 4;
+                for (auto i = 0; i < cmd_number; i++)
+                    pool_->notify_command(cmd);
+            }
+            else
+            {
+                pool_->notify_command(cmd);
+            }
+        }
     }
 };
 

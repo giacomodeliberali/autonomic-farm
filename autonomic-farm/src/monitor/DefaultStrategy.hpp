@@ -100,12 +100,26 @@ public:
                 else if (is_negative_slope(slope))
                 {
                     if (is_under_average(average))
+                    {
                         cmd = ADD_WORKER;
+
+                        if (slope <= -QUAD_COMMAND_SLOPE_THRESHOLD)
+                            cmd = FlagUtils::combine(cmd, MULTIPLE_COMMANDS, QUAD_COMMAND);
+                        else if (slope <= -DOUBLE_COMMAND_SLOPE_THRESHOLD)
+                            cmd = FlagUtils::combine(cmd, MULTIPLE_COMMANDS, DOUBLE_COMMAND);
+                    }
                 }
                 else if (is_positive_slope(slope))
                 {
                     if (is_above_average(average))
+                    {
                         cmd = REMOVE_WORKER;
+
+                        if (slope >= QUAD_COMMAND_SLOPE_THRESHOLD)
+                            cmd = FlagUtils::combine(cmd, MULTIPLE_COMMANDS, QUAD_COMMAND);
+                        else if (slope >= DOUBLE_COMMAND_SLOPE_THRESHOLD)
+                            cmd = FlagUtils::combine(cmd, MULTIPLE_COMMANDS, DOUBLE_COMMAND);
+                    }
                 }
             }
 
