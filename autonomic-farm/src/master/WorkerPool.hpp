@@ -71,7 +71,7 @@ public:
             worker->start();
             total_spawned_workers++;
         }
-        this->start();
+        this->start(); // start run() method in separate thread
     }
 
     // Assign a task to free worker or waits until one is available.
@@ -93,7 +93,9 @@ public:
             available_workers_pool_.push(worker);
             available_workers_pool_.notify();
             master_->collect(result);
-            all_joined_condition.notify_one();
+
+            // notify the condition that might be waiting for remaining workers
+            all_joined_condition.notify_one(); 
         }
     }
 
@@ -102,7 +104,7 @@ public:
     {
         unique_lock<mutex> lock(this->join_all_mutex);
 
-        // send the EOS to the command thread
+        // send the EOS to the command thread (run() method)
         this->notify_command(END_OF_STREAM);
         // join the command thread
         this->join();

@@ -83,6 +83,7 @@ public:
         {
             if (FlagUtils::is(cmd, MULTIPLE_COMMANDS))
             {
+                // notify multiple times
                 int cmd_number = FlagUtils::is(cmd, DOUBLE_COMMAND) ? 2 : 4;
                 for (auto i = 0; i < cmd_number; i++)
                     pool_->notify_command(cmd);

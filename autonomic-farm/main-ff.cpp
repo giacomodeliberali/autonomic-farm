@@ -56,13 +56,20 @@ private:
     Collector<TOUT> *collector_;
     Monitor *monitor_;
     ff_farm *farm_;
+
+    // The actual number of active workers
     int actual_nw_;
+
+    // The max number of workers
     int max_nw_;
+
+    // The difference between emitted and collected task. If 0 means that all the emitted tasks have been also collected.
     int task_diff_ = 0;
 
 public:
     MasterFFWorker(IEmitter<TIN> *emitter, int max_nw, function<TOUT *(TIN *)> func, float expected_throughput) : emitter_(emitter), max_nw_(max_nw)
     {
+        // The monitor notifies back to the master since it is his pool reference
         monitor_ = new Monitor(this, expected_throughput);
         collector_ = new Collector<TOUT>();
 
@@ -70,8 +77,8 @@ public:
         for (auto i = 0; i < max_nw_; i++)
             workers.push_back(new DefaultFFWorker<TIN, TOUT>(func));
 
+        // the master acts as emitter and collector
         this->farm_ = new ff_farm(workers);
-        this->farm_->cleanup_workers();
         this->farm_->remove_collector();
         this->farm_->add_emitter(this);
         this->farm_->wrap_around();
@@ -166,7 +173,7 @@ public:
     MasterFFWorker<TIN, TOUT> *run()
     {
         // http://calvados.di.unipi.it/storage/tutorial/html/tutorial.html
-        int run_result = farm_->run_then_freeze(); // run workers and once they are done, freeze them
+        int run_result = farm_->run_then_freeze(); // run workers and once they are done, freeze them instead of killing them
         assert(run_result == 0);
         farm_->wait_freezing(); // wait all to freeze
         return this;
