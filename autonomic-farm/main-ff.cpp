@@ -40,8 +40,6 @@ public:
 
     TOUT *svc(TIN *task)
     {
-        if (task == (TIN *)END_OF_STREAM)
-            return this->EOS;
         auto result = func_(task);
         this->ff_send_out(result);
         return this->GO_ON;
@@ -95,7 +93,7 @@ public:
         {
             if (get_actual_workers_number() < max_nw_)
             {
-                this->thaw(actual_nw_, true); // unfreeze last
+                this->getlb()->thaw(actual_nw_, true); // unfreeze last
                 actual_nw_++;
             }
         }
@@ -131,13 +129,12 @@ public:
             }
             return this->GO_ON;
         }
-        // each time a task gets collected
-        if (result)
-        {
-            monitor_->notify();
-            collector_->collect(result);
-            task_diff_--;
-        }
+
+        // result from worker
+
+        monitor_->notify();
+        collector_->collect(result);
+        task_diff_--;
 
         auto next = emitter_->get_next();
 
@@ -149,25 +146,28 @@ public:
         }
         else
         {
-            // emitter has ended
-
             if (task_diff_ != 0)
                 return this->GO_ON;
 
-            for (auto i = this->actual_nw_ - 1; i < this->max_nw_ - 1; i++)
-            {
-                // unfreeze all remaining
-                this->thaw(i, true);
-                this->actual_nw_++;
-            }
-
-            assert(actual_nw_ == max_nw_);
-
-            for (auto i = 0; i < this->actual_nw_; i++)
-                this->ff_send_out_to((TIN *)END_OF_STREAM, worker_id);
+            this->thaw_all();
 
             return this->EOS;
         }
+    }
+
+    void thaw_all()
+    {
+        for (auto i = this->actual_nw_ - 1; i < this->max_nw_ - 1; i++)
+        {
+            // unfreeze all remaining
+            this->getlb()->thaw(i, true);
+            this->actual_nw_++;
+        }
+
+        assert(actual_nw_ == max_nw_);
+
+        for (auto i = 0; i < this->actual_nw_; i++)
+            this->ff_send_out_to(this->EOS_NOFREEZE, i);
     }
 
     MasterFFWorker<TIN, TOUT> *run()
