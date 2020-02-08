@@ -6,6 +6,7 @@
 #include "../common/Constants.hpp"
 #include <vector>
 #include <numeric>
+#include <cmath>
 
 // The default strategy for the monitor
 class DefaultStrategy : public IStrategy
@@ -57,7 +58,7 @@ private:
         {
             // https://en.wikipedia.org/wiki/Simple_linear_regression
             numerator += (x_window[i] - avgX) * (current_window_[i] - avgY); // \sum (x_i - x_avg)
-            denominator += (x_window[i] - avgX) * (x_window[i] - avgX); // \sum (y_i - y_avg)
+            denominator += (x_window[i] - avgX) * (x_window[i] - avgX);      // \sum (y_i - y_avg)
         }
 
         if (denominator == 0.0)
@@ -90,17 +91,19 @@ private:
 
     bool is_costant_slope(float slope)
     {
-        return slope >= -slope_threshold_ && slope <= slope_threshold_;
+        float abs_slope = abs(slope);
+        return abs_slope <= slope_threshold_;
     }
 
     bool is_positive_slope(float slope)
     {
-        return slope > slope_threshold_;
+        return slope > 0 && slope > slope_threshold_;
     }
 
     bool is_negative_slope(float slope)
     {
-        return slope < slope_threshold_;
+
+        return slope < 0 && slope < -slope_threshold_;
     }
 
 public:
