@@ -9,7 +9,7 @@
 #include <iostream>
 
 // Refresh the throughput every 10 milliseconds
-#define MONITOR_THROUGHPUT_WINDOW 10.0
+#define MONITOR_THROUGHPUT_WINDOW 5.0
 
 using namespace std;
 
@@ -40,6 +40,7 @@ private:
     // The starting time of the current window
     chrono::high_resolution_clock::time_point monitor_start;
 
+    chrono::high_resolution_clock::time_point time_zero;
 public:
     Monitor(IPool *pool, float expected_throughput) : pool_(pool), expected_throughput_(expected_throughput)
     {
@@ -48,8 +49,8 @@ public:
 
     void init()
     {
-        monitor_start = chrono::high_resolution_clock::now();
-        cout << "tasks,expected_throughput,actual_throughput,nw" << endl;
+        monitor_start = time_zero = chrono::high_resolution_clock::now();
+        cout << "time,tasks,expected_throughput,actual_throughput,nw" << endl;
     }
 
     // Called every time a task has been collected
@@ -76,8 +77,9 @@ public:
         auto actual_workers_number = pool_->get_actual_workers_number();
         auto cmd = strategy->get(actual_throughput, actual_workers_number);
 
+        auto elapsed_from_time_zero = chrono::duration_cast<std::chrono::microseconds>(now - time_zero).count();
         cout.precision(2);
-        cout << std::fixed << total_collected_task << "," << expected_throughput_ << "," << actual_throughput << "," << actual_workers_number << "\n";
+        cout << std::fixed << elapsed_from_time_zero << "," << total_collected_task << "," << expected_throughput_ << "," << actual_throughput << "," << actual_workers_number << "\n";
 
         if (FlagUtils::is(cmd, ADD_WORKER) || FlagUtils::is(cmd, REMOVE_WORKER))
         {
