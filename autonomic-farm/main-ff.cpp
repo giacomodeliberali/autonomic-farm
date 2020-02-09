@@ -67,11 +67,11 @@ private:
     void initial_scheduling()
     {
         monitor_->init();
-        for (int worker_id = 0; worker_id < max_nw_; worker_id++)
+        for (int i = 0; i < max_nw_; i++)
         {
             auto next = emitter_->get_next();
             task_diff_++;
-            this->ff_send_out_to(next, worker_id);
+            this->ff_send_out(next);
         }
     }
 
