@@ -64,6 +64,40 @@ private:
     // The difference between emitted and collected task. If 0 means that all the emitted tasks have been also collected.
     int task_diff_ = 0;
 
+    void initial_scheduling()
+    {
+        monitor_->init();
+        for (int worker_id = 0; worker_id < max_nw_; worker_id++)
+        {
+            auto next = emitter_->get_next();
+            task_diff_++;
+            this->ff_send_out_to(next, worker_id);
+        }
+    }
+
+    void collect(TOUT *result)
+    {
+        // result from worker
+        monitor_->notify();
+        collector_->collect(result);
+        task_diff_--;
+    }
+
+    void thaw_all()
+    {
+        if (actual_nw_ != max_nw_)
+            for (auto i = 0; i < this->max_nw_; i++)
+            {
+                // unfreeze all
+                this->getlb()->thaw(i, false);
+                this->actual_nw_++;
+            }
+
+        assert(actual_nw_ == max_nw_);
+
+        this->broadcast_task(this->EOS);
+    }
+
 public:
     MasterFFWorker(IEmitter<TIN> *emitter, int max_nw, function<TOUT *(TIN *)> func, float expected_throughput) : emitter_(emitter), max_nw_(max_nw)
     {
@@ -93,7 +127,7 @@ public:
         {
             if (get_actual_workers_number() < max_nw_)
             {
-                this->getlb()->thaw(actual_nw_, true); // unfreeze last
+                this->getlb()->thaw(actual_nw_, false); // unfreeze last
                 actual_nw_++;
             }
         }
@@ -120,24 +154,13 @@ public:
         if (worker_id < 0)
         {
             // initial scheduling
-            monitor_->init();
-            for (int worker_id = 0; worker_id < max_nw_; worker_id++)
-            {
-                auto next = emitter_->get_next();
-                task_diff_++;
-                this->ff_send_out_to(next, worker_id);
-            }
+            this->initial_scheduling();
             return this->GO_ON;
         }
 
-        // result from worker
-
-        monitor_->notify();
-        collector_->collect(result);
-        task_diff_--;
+        this->collect(result);
 
         auto next = emitter_->get_next();
-
         if (next)
         {
             task_diff_++;
@@ -153,21 +176,6 @@ public:
 
             return this->EOS;
         }
-    }
-
-    void thaw_all()
-    {
-        for (auto i = this->actual_nw_ - 1; i < this->max_nw_ - 1; i++)
-        {
-            // unfreeze all remaining
-            this->getlb()->thaw(i, true);
-            this->actual_nw_++;
-        }
-
-        assert(actual_nw_ == max_nw_);
-
-        for (auto i = 0; i < this->actual_nw_; i++)
-            this->ff_send_out_to(this->EOS_NOFREEZE, i);
     }
 
     MasterFFWorker<TIN, TOUT> *run()
