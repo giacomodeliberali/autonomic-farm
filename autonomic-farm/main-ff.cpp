@@ -86,9 +86,10 @@ private:
     void thaw_all()
     {
         if (actual_nw_ != max_nw_)
-            for (auto i = 0; i < this->max_nw_; i++)
+            // unfreeze all
+            for (auto i = actual_nw_ - 1; i < this->max_nw_ - 1; i++)
             {
-                // unfreeze all
+                this->getlb()->wait_freezing(i);
                 this->getlb()->thaw(i, false);
                 this->actual_nw_++;
             }
@@ -127,7 +128,8 @@ public:
         {
             if (get_actual_workers_number() < max_nw_)
             {
-                this->getlb()->thaw(actual_nw_, false); // unfreeze last
+                this->getlb()->wait_freezing(actual_nw_);
+                this->getlb()->thaw(actual_nw_, true); // unfreeze last
                 actual_nw_++;
             }
         }
