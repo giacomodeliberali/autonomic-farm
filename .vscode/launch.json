@@ -1,0 +1,41 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug (g++)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/farm.out",
+            "args": [
+                "1",
+                "1"
+            ],
+            "preLaunchTask": "Build",
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb"
+        },
+        {
+            "name": "Debug FF (g++)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/farm-ff.out",
+            "args": [
+                "8",
+                "1",
+                ">csv/test.csv"
+            ],
+            "preLaunchTask": "Build FF",
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb"
+        }
+    ]
+}

@@ -1,5 +1,7 @@
-*.DS_STORE
-.vscode/
-
-# Executable files
-assign2bis
+*.out
+*.dSYM
+*.csv
+.ipynb_checkpoints/
+rsync*.sh
+ssh.sh
+*.DS_Store
